@@ -1,0 +1,15 @@
+This repository is basically a Maven wrapper around the original networking
+extension written by Russell Francis and hosted at the Mercurial repository over
+here:
+
+ https://hg.metro-six.com/public/pg-inet-types/
+
+
+The official documentation for this is here:
+
+ http://www.metro-six.com/products/labs/pg-inet-types
+
+
+In advance, this repository provides some extended means like integration into
+OSGi runtime environments as well as other code extensions to the original.
+
