@@ -79,9 +79,9 @@
     </repositories>
     
     <modules>
-        <module>logging</module>
-        <module>pg-inet-types</module>
-        <module>pg-inet-eclipselink</module>
+        <module>utils.test</module>
+        <module>org.ancoron.postgresql.net</module>
+        <module>org.ancoron.postgresql.jpa</module>
     </modules>
     
     <dependencyManagement>
@@ -163,6 +163,15 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                     </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
                 </configuration>
             </plugin>
             <plugin>

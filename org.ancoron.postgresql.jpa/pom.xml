@@ -13,6 +13,10 @@
     <packaging>jar</packaging>
 
     <name>PostgreSQL Network Types EclipseLink Extension OSGi Bundle</name>
+    
+    <description>
+        This OSGi bundle contains classes that can be used directly within a JPA 2.0 enabled application to support direct mapping of the PostgreSQL specific data types 'inet', 'cidr' and 'macaddr'. The implementation of these classes is specific to EclipseLink as there is no standard method for integrating custom types in JPA.
+    </description>
 
     <dependencies>
         <dependency>
@@ -75,8 +79,6 @@
                     <excludeDependencies>true</excludeDependencies>
                     -->
                     <instructions>
-                        <Built-By>ancoron</Built-By>
-                        <Implementation-Version>${postgresql.version}</Implementation-Version>
                         <Fragment-Host>org.eclipse.persistence.jpa.osgi</Fragment-Host>
                         <Export-Package>
                             ${project.artifactId}*

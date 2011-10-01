@@ -6,3 +6,8 @@
 /pg-inet-types/src/test/java/org/postgresql/test/net/
 /pg-inet-types/src/main/java/org/postgresql/net/
 /logging/target/
+/utils.test/target/
+/org.ancoron.postgresql.net/target/
+/org.ancoron.postgresql.jpa/target/
+/org.ancoron.postgresql.net/src/main/java/org/postgresql/net/
+/org.ancoron.postgresql.net/src/test/java/org/postgresql/test/net/
