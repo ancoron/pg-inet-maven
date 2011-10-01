@@ -1,3 +1,8 @@
 /target/
 /src/test/java/org/postgresql/test/net/
 /src/main/java/org/postgresql/net/
+/pg-inet-types/target/
+/pg-inet-eclipselink/target/
+/pg-inet-types/src/test/java/org/postgresql/test/net/
+/pg-inet-types/src/main/java/org/postgresql/net/
+/logging/target/

@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.postgresql.test;
+package org.ancoron.postgresql.jpa.test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
@@ -80,13 +83,37 @@ public class TestUtil {
         PG_SSL = Boolean.getBoolean("pgsql.database");
     }
 
+    public static String getPGDatabase() {
+        return PG_DATABASE;
+    }
+
+    public static String getPGHostname() {
+        return PG_HOSTNAME;
+    }
+
+    public static String getPGPassword() {
+        return PG_PASSWORD;
+    }
+
+    public static String getPGPort() {
+        return PG_PORT;
+    }
+
+    public static String getPGUser() {
+        return PG_USER;
+    }
+    
+    public static String getPGJDBCUrl() {
+        return "jdbc:postgresql://" + PG_HOSTNAME + ":" + PG_PORT + "/" + PG_DATABASE;
+    }
+
     /**
      * 
      * @return
      * @throws SQLException 
      */
     public static Connection openDB() throws SQLException {
-        String url = "jdbc:postgresql://" + PG_HOSTNAME + ":" + PG_PORT + "/" + PG_DATABASE;
+        String url = getPGJDBCUrl();
 
         Properties props = new Properties();
         props.setProperty("user", PG_USER);

@@ -10,11 +10,11 @@
     </parent>
 
     <groupId>org.ancoron.postgresql</groupId>
-    <artifactId>pginet</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <artifactId>pginet-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
-    <name>PostgreSQL Network Types Extension OSGi Bundle</name>
+    <name>PostgreSQL Network Types Parent</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -67,139 +67,119 @@
         </developer>
     </developers>
 
-    <dependencies>
-        <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.9</version>
-        </dependency>
-    </dependencies>
-
+    <repositories>
+        <repository>
+            <id>glassfish-repo-archive</id>
+            <name>Nexus repository collection for Glassfish</name>
+            <url>http://maven.glassfish.org/content/groups/glassfish</url>
+            <snapshots>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+    
+    <modules>
+        <module>logging</module>
+        <module>pg-inet-types</module>
+        <module>pg-inet-eclipselink</module>
+    </modules>
+    
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>${postgresql.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>javax.persistence</artifactId>
+                <version>2.0.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.persistence</groupId>
+                <artifactId>org.eclipse.persistence.osgi</artifactId>
+                <version>2.3.0</version>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>4.9</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.5</version>
+                    <extensions>true</extensions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.10</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.surefire</groupId>
+                            <artifactId>surefire-junit47</artifactId>
+                            <version>2.10</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-scm-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-scm-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <id>export-original-inplace</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>checkout</goal>
-                        </goals>
-                        <configuration>
-                            <checkoutDirectory>${project.build.directory}/upstream</checkoutDirectory>
-                            <connectionUrl>scm:hg:https://hg.metro-six.com/public/pg-inet-types</connectionUrl>
-                            <developerConnectionUrl></developerConnectionUrl>
-                            <pushChanges>false</pushChanges>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-upstream</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <overwrite>true</overwrite>
-                            <outputDirectory>${project.build.sourceDirectory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.directory}/upstream/src/main/java</directory>
-                                    <includes>
-                                        <include>**/*.java</include>
-                                    </includes>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-upstream-test</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <overwrite>true</overwrite>
-                            <outputDirectory>${project.build.testSourceDirectory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.directory}/upstream/src/unittests/java</directory>
-                                    <includes>
-                                        <include>**/*.java</include>
-                                    </includes>
-                                    <filtering>false</filtering>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <archive>  
-                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-                    </archive> 
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.5</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <!--
-                    <excludeDependencies>true</excludeDependencies>
-                    -->
                     <instructions>
-                        <Built-By>ancoron</Built-By>
-                        <Implementation-Version>${postgresql.version}</Implementation-Version>
-                        <Fragment-Host>system.bundle; extension:=framework</Fragment-Host>
-                        <Export-Package>
-                            org.postgresql*
-                        </Export-Package>
-                        <_removeheaders>
-                            Import-Package,
-                            Private-Package
-                        </_removeheaders>
-                        <_nodefaultversion>true</_nodefaultversion>
-                        <_nouses>true</_nouses>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                     </instructions>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>    
-                            <goal>manifest</goal>
-                        </goals>   
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.9</version>
                 <configuration>
-                    <excludes>
-                        <exclude>**/TestUtil</exclude>
-                    </excludes>
+                    <systemPropertyVariables>
+                        <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
                 </configuration>
             </plugin>
         </plugins>
