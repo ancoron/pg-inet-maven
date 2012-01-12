@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
-        <version>8.4.703-SNAPSHOT</version>
+        <version>8.4.702.jdbc4-1-SNAPSHOT</version>
     </parent>
 
     <artifactId>org.postgresql.net</artifactId>
@@ -62,23 +62,11 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <!--
-                    <excludeDependencies>true</excludeDependencies>
-                    -->
                     <instructions>
                         <Export-Package>
-                            org.postgresql.net*
+                            org.postgresql.net*;jdbc=type${jdbc.type}
                         </Export-Package>
                         <Bundle-License>http://jdbc.postgresql.org/license.html</Bundle-License>
-                        <!--
-                        <Fragment-Host>system.bundle; extension:=framework</Fragment-Host>
-                        <_removeheaders>
-                            Import-Package,
-                            Private-Package
-                        </_removeheaders>
-                        <_nodefaultversion>true</_nodefaultversion>
-                        <_nouses>true</_nouses>
-                        -->
                     </instructions>
                 </configuration>
                 <executions>
