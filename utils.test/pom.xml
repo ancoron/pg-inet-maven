@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>8.4.702-SNAPSHOT</version>
     </parent>
 
     <artifactId>test-util</artifactId>

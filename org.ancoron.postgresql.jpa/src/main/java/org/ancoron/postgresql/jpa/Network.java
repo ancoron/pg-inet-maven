@@ -104,4 +104,9 @@ public class Network implements Serializable {
     public void setV6(boolean v6) {
         this.v6 = v6;
     }
+
+    @Override
+    public String toString() {
+        return net != null ? net.toString() : "null";
+    }
 }

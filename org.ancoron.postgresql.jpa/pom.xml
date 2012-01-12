@@ -6,26 +6,27 @@
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>8.4.702-SNAPSHOT</version>
     </parent>
 
     <artifactId>org.ancoron.postgresql.jpa</artifactId>
     <packaging>jar</packaging>
 
-    <name>PostgreSQL Network Types EclipseLink Extension OSGi Bundle</name>
+    <name>PostgreSQL Network Types JPA Extension OSGi Bundle</name>
     
     <description>
-        This OSGi bundle contains classes that can be used directly within a JPA 2.0 enabled application to support direct mapping of the PostgreSQL specific data types 'inet', 'cidr' and 'macaddr'. The implementation of these classes is specific to EclipseLink as there is no standard method for integrating custom types in JPA.
+        This OSGi bundle contains classes that can be used directly within a JPA 2.0 enabled application to support direct mapping of the PostgreSQL specific data types 'inet', 'cidr' and 'macaddr'.
     </description>
 
     <dependencies>
         <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.postgresql.osgi</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>org.ancoron.postgresql.net</artifactId>
+            <artifactId>org.postgresql.net</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -79,16 +80,22 @@
                     <excludeDependencies>true</excludeDependencies>
                     -->
                     <instructions>
-                        <Fragment-Host>org.eclipse.persistence.jpa.osgi</Fragment-Host>
                         <Export-Package>
                             ${project.artifactId}*
                         </Export-Package>
+                        <Import-Package>
+                            org.eclipse*;resolution:=optional,
+                            *
+                        </Import-Package>
+                        <!--
+                        <Fragment-Host>org.eclipse.persistence.jpa.osgi</Fragment-Host>
                         <_removeheaders>
                             Import-Package,
                             Private-Package
                         </_removeheaders>
                         <_nodefaultversion>true</_nodefaultversion>
                         <_nouses>true</_nouses>
+                        -->
                     </instructions>
                 </configuration>
                 <executions>
@@ -116,6 +123,9 @@
                     </properties>
                     <parallel>methods</parallel>
                     <threadCount>4</threadCount>
+                    <systemPropertyVariables>
+                        <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>

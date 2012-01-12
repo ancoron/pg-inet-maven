@@ -11,3 +11,8 @@
 /org.ancoron.postgresql.jpa/target/
 /org.ancoron.postgresql.net/src/main/java/org/postgresql/net/
 /org.ancoron.postgresql.net/src/test/java/org/postgresql/test/net/
+/org.ancoron.postgresql.osgi/target/
+/org.ancoron.postgresql.test.glassfish/target/
+/net.postgresql.osgi/target/
+/org.postgresql.net/target/
+/org.postgresql.osgi/target/

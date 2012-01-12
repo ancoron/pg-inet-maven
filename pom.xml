@@ -11,7 +11,7 @@
 
     <groupId>org.ancoron.postgresql</groupId>
     <artifactId>pginet-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>8.4.702-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>PostgreSQL Network Types Parent</name>
@@ -19,8 +19,18 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <postgresql.version>8.4-702.jdbc4</postgresql.version>
-    </properties>
 
+        <jpa.version>2.0.3</jpa.version>
+        <eclipselink.version>2.3.2</eclipselink.version>
+
+        <!-- properties for test execution against a real PostgreSQL -->
+        <pgsql.host>localhost</pgsql.host>
+        <pgsql.port>5432</pgsql.port>
+        <pgsql.database>pg_inet_types_test</pgsql.database>
+        <pgsql.user>pginettest</pgsql.user>
+        <pgsql.password>pginettest</pgsql.password>
+    </properties>
+    
     <url>https://github.com/ancoron/pg-inet-maven</url>
     
     <licenses>
@@ -79,9 +89,11 @@
     </repositories>
     
     <modules>
+        <module>org.postgresql.osgi</module>
         <module>utils.test</module>
-        <module>org.ancoron.postgresql.net</module>
+        <module>org.postgresql.net</module>
         <module>org.ancoron.postgresql.jpa</module>
+        <module>org.ancoron.postgresql.test.glassfish</module>
     </modules>
     
     <dependencyManagement>
@@ -94,17 +106,17 @@
             <dependency>
                 <groupId>org.eclipse.persistence</groupId>
                 <artifactId>javax.persistence</artifactId>
-                <version>2.0.3</version>
+                <version>${jpa.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.persistence</groupId>
                 <artifactId>org.eclipse.persistence.osgi</artifactId>
-                <version>2.3.0</version>
+                <version>${eclipselink.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.9</version>
+                <version>4.10</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -115,26 +127,29 @@
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
                     <version>2.3.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>2.3.5</version>
+                    <version>2.3.6</version>
                     <extensions>true</extensions>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.10</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.apache.maven.surefire</groupId>
-                            <artifactId>surefire-junit47</artifactId>
-                            <version>2.10</version>
-                        </dependency>
-                    </dependencies>
+                    <version>2.11</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -162,6 +177,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                     </instructions>
                 </configuration>
             </plugin>
@@ -176,20 +192,37 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

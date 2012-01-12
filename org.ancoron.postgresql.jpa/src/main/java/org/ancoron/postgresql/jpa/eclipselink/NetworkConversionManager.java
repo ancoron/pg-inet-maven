@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 ancoron.
+ * Copyright 2012 ancoron.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,18 @@
  */
 package org.ancoron.postgresql.jpa.eclipselink;
 
-import org.postgresql.net.PGinet;
+import org.eclipse.persistence.internal.helper.ConversionManager;
 
 /**
  *
  * @author ancoron
  */
-public interface ExtendedPropertiesCache {
+public class NetworkConversionManager extends ConversionManager {
     
-    public Object[] get(PGinet net);
-    public void put(PGinet net, Object[] properties);
+    private final ConversionManager delegate;
+    
+    public NetworkConversionManager(ConversionManager delegate) {
+        this.delegate = delegate;
+    }
+
 }

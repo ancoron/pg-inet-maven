@@ -6,10 +6,10 @@
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>8.4.702-SNAPSHOT</version>
     </parent>
 
-    <artifactId>org.ancoron.postgresql.net</artifactId>
+    <artifactId>org.postgresql.net</artifactId>
     <packaging>jar</packaging>
 
     <name>PostgreSQL Network Types Extension OSGi Bundle</name>
@@ -20,8 +20,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
+            <groupId>org.ancoron.postgresql</groupId>
+            <artifactId>org.postgresql.osgi</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -29,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>logging</artifactId>
+            <artifactId>test-util</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -48,7 +49,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <archive>  
+                    <archive>
                         <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
                         <manifestEntries>
                             <Built-By>ancoron</Built-By>
@@ -66,16 +67,19 @@
                     <excludeDependencies>true</excludeDependencies>
                     -->
                     <instructions>
-                        <Fragment-Host>system.bundle; extension:=framework</Fragment-Host>
                         <Export-Package>
-                            org.postgresql*
+                            org.postgresql.net*
                         </Export-Package>
+                        <Bundle-License>http://jdbc.postgresql.org/license.html</Bundle-License>
+                        <!--
+                        <Fragment-Host>system.bundle; extension:=framework</Fragment-Host>
                         <_removeheaders>
                             Import-Package,
                             Private-Package
                         </_removeheaders>
                         <_nodefaultversion>true</_nodefaultversion>
                         <_nouses>true</_nouses>
+                        -->
                     </instructions>
                 </configuration>
                 <executions>
@@ -95,6 +99,9 @@
                     <excludes>
                         <exclude>**/TestUtil</exclude>
                     </excludes>
+                    <systemPropertyVariables>
+                        <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
         </plugins>
@@ -147,6 +154,26 @@
                                             <directory>${project.build.directory}/upstream/src/main/java</directory>
                                             <includes>
                                                 <include>**/*.java</include>
+                                            </includes>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>copy-upstream-resources</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <overwrite>true</overwrite>
+                                    <outputDirectory>src/main/resources</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}/upstream</directory>
+                                            <includes>
+                                                <include>LICENSE.TXT</include>
                                             </includes>
                                             <filtering>false</filtering>
                                         </resource>

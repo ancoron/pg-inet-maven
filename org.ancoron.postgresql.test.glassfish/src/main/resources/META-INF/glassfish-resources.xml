@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : glassfish-resources.xml
+    Created on : December 21, 2011, 3:08 PM
+    Author     : ancoron
+    Description:
+        Purpose of the document follows.
+-->
+
+<!DOCTYPE resources PUBLIC '-//GlassFish.org//DTD GlassFish Application Server 3.1 Resource Definitions//EN' 'http://glassfish.org/dtds/glassfish-resources_1_5.dtd'>
+<resources>
+    <jdbc-connection-pool name="java:app/jdbc/network-test-pool"
+                          res-type="javax.sql.DataSource"
+                          datasource-classname="org.postgresql.ds.PGSimpleDataSource"
+                          pool-resize-quantity="1"
+                          max-pool-size="5"
+                          steady-pool-size="0" >
+        <property name="serverName" value="${pgsql.host}" />
+        <property name="portNumber" value="${pgsql.port}" />
+        <property name="dataBaseName" value="${pgsql.database}" />
+        <property name="User" value="${pgsql.user}" />
+        <property name="Password" value="${pgsql.password}" />
+    </jdbc-connection-pool>
+
+    <jdbc-resource jndi-name="java:app/jdbc/NetworkTestDS" pool-name="java:app/jdbc/network-test-pool" />
+
+</resources>
