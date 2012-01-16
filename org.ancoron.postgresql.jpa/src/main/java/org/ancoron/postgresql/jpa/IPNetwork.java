@@ -59,7 +59,9 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
             try {
                 setValue(net);
             } catch (SQLException ex) {
-                throw new IllegalArgumentException("Unable to construct network", ex);
+                throw new IllegalArgumentException(
+                        "Unable to construct network for given String '" + net
+                        + "': " + ex.getMessage(), ex);
             }
         }
     }
