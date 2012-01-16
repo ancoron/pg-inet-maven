@@ -70,6 +70,8 @@
                             *
                         </Import-Package>
                         <Bundle-License>http://jdbc.postgresql.org/license.html</Bundle-License>
+                        <Original-Author>Russel Francis &lt;russ@metro-six.com&gt;</Original-Author>
+                        <Bundle-DocURL></Bundle-DocURL>
                     </instructions>
                 </configuration>
                 <executions>
@@ -191,6 +193,58 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-patch-plugin</artifactId>
+                        <version>1.1.1</version>
+                        <configuration>
+                            <targetDirectory>${project.build.sourceDirectory}</targetDirectory>
+                            <skipApplication>false</skipApplication>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>bugfixing</id>
+                                <configuration>
+                                    <patchDirectory>src/main/patches</patchDirectory>
+                                    <patchTrackingFile>${project.build.directory}/patches-applied.txt</patchTrackingFile>
+                                    <naturalOrderProcessing>true</naturalOrderProcessing>
+                                </configuration>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>apply</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>source-clean</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.sourceDirectory}</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>${project.build.testSourceDirectory}</directory>
+                                    <includes>
+                                        <include>**/*Test.java</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>**/TestUtil.java</exclude>
+                                    </excludes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

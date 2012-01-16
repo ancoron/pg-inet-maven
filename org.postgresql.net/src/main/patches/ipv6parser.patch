@@ -1,0 +1,14 @@
+diff -r 7c28ea7071f6 org/postgresql/net/PGNetworkBase.java
+--- org/postgresql/net/PGNetworkBase.java	Tue Sep 14 17:59:56 2010 -0400
++++ org/postgresql/net/PGNetworkBase.java	Mon Jan 16 23:51:34 2012 +0100
+@@ -193,8 +193,8 @@
+ 
+ 			// Process the tail.
+ 			int j = 15;
+-			k = 0;
+-			for(;k < tailSize; ++k )
++			k = tailSize - 1;
++			for(;k >= 0; --k )
+ 			{
+ 				String chunk = tailTokenizer.getToken( k );
+ 				if( chunk.length() > 0 )
