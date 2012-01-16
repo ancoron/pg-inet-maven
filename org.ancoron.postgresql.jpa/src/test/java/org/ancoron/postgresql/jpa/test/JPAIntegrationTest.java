@@ -34,6 +34,7 @@ import org.postgresql.util.PGobject;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
 
 /**
@@ -222,15 +223,15 @@ public class JPAIntegrationTest {
         }
     }
     
-    //@Test
+    @Test
     public void testReadWriteStress() throws Exception {
         EntityManager em = emFactory.createEntityManager();
 
         String[] validAddresses = {
 			"0.0.0.0",
 			"192.168.1.10/32",
-			"192.168.1.10/20",
-			"10.10.10.120/8",
+			"192.168.64.0/20",
+			"10.0.0.0/8",
 			"132.235.215.243",
 			"200.46.204.71",
 			"::",
@@ -241,7 +242,7 @@ public class JPAIntegrationTest {
 			"4bc:ab:1234::bcda/128",
 			"1234::1234",
 			"1234:1234:1234:1234:1234:1234:1234:123E/127",
-			"1234:1234:1234:1234:1234:1234:1234:123F/127",
+			"1234:1234:1234:1234:1234:1234:1234:123A/127",
 			"1234:1234:1234:1234:1234:1234:1234:123F/128",
 			"::192.168.1.1"
 		};
@@ -289,18 +290,24 @@ public class JPAIntegrationTest {
 
             String table = AdvancedNetworkEntity.class.getAnnotation(Table.class).name();
             String column = AdvancedNetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
-            Query nq = em.createNativeQuery("SELECT * FROM " + table + " WHERE " + column + " >>= inet '192.168.1.10'", AdvancedNetworkEntity.class);
-            res = nq.getResultList();
+            Query nq = em.createNativeQuery("SELECT * FROM " + table + " WHERE " + column + " >>= inet '192.168.1.10'");
+            List<Object[]> res2 = nq.getResultList();
 
             end = System.currentTimeMillis();
             
             log.log(Level.INFO, "Loaded {0} matching entities in {1} milliseconds",
-                    new Object[] {res.size(), end - start});
-            for(AdvancedNetworkEntity entity : res) {
+                    new Object[] {res2.size(), end - start});
+            for(Object[] o : res2) {
+                log.warning("Using workaround for EclipseLink bug #321649");
+                // net = (AdvancedNetworkEntity) networks.get(0);
+                // Assert.assertTrue(em.contains(net));
+                AdvancedNetworkEntity entity = new AdvancedNetworkEntity();
+                entity.setId((Long) o[0]);
+                entity.setNetwork(new IPNetwork(((PGobject) o[1]).getValue()));
                 em.detach(entity);
                 entity = null;
             }
-            res = null;
+            res2 = null;
             em.getEntityManagerFactory().getCache().evictAll();
         } catch(Exception x) {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
