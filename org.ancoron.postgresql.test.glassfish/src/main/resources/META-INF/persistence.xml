@@ -9,6 +9,7 @@
             <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
             -->
             <property name="eclipselink.target-database" value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
+            <property name="eclipselink.target-server" value="SunAS9"/>
             <property name="eclipselink.logging.logger" value="JavaLogger"/>
             <property name="eclipselink.logging.level" value="FINE"/>
             <property name="eclipselink.logging.parameters" value="true"/>
