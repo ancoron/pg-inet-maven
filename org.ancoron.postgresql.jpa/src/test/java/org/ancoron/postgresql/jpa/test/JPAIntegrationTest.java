@@ -28,7 +28,7 @@ import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
-import org.ancoron.postgresql.jpa.Network;
+import org.ancoron.postgresql.jpa.IPNetwork;
 import org.junit.Test;
 import org.postgresql.util.PGobject;
 import org.junit.AfterClass;
@@ -154,18 +154,18 @@ public class JPAIntegrationTest {
             // testing persist() ...
             em.getTransaction().begin();
 
-            AdvancedNetworkEntity net = new AdvancedNetworkEntity(new Network("10.10.0.0/16"));
+            AdvancedNetworkEntity net = new AdvancedNetworkEntity(new IPNetwork("10.10.0.0/16"));
             
             em.persist(net);
             Assert.assertTrue(em.contains(net));
 
             em.getTransaction().commit();
             Assert.assertNotNull("AdvancedNetworkEntity with PGinet "
-                    + net.getNetwork().getNet().getValue() + " was not persisted",
+                    + net.getNetwork().getValue() + " was not persisted",
                     net.getId());
 
             log.log(Level.INFO, "AdvancedNetworkEntity with PGinet {0} has been persisted :)",
-                    net.getNetwork().getNet().getValue());
+                    net.getNetwork().getValue());
 
             Long currentId = net.getId();
             
@@ -184,7 +184,7 @@ public class JPAIntegrationTest {
             Assert.assertTrue(em.contains(net));
 
             log.log(Level.INFO, "AdvancedNetworkEntity with ID {0} ({1}) has been found :)",
-                    new Object[] {currentId, net.getNetwork().getNet().getValue()});
+                    new Object[] {currentId, net.getNetwork().getValue()});
             
             // testing query...
             em.getTransaction().begin();
@@ -192,7 +192,7 @@ public class JPAIntegrationTest {
             String table = AdvancedNetworkEntity.class.getAnnotation(Table.class).name();
             String column = AdvancedNetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
             Query q = em.createNativeQuery("SELECT b.c_id, b.c_network FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
-            q.setParameter("IPADDR", new PGinet("10.10.1.6"));
+            q.setParameter("IPADDR", new IPNetwork("10.10.1.6"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
@@ -204,11 +204,11 @@ public class JPAIntegrationTest {
             Object[] o = (Object[]) networks.get(0);
             net = new AdvancedNetworkEntity();
             net.setId((Long) o[0]);
-            net.setNetwork(new Network(((PGobject) o[1]).getValue()));
+            net.setNetwork(new IPNetwork(((PGobject) o[1]).getValue()));
 
 
             log.log(Level.INFO, "AdvancedNetworkEntity with ID {0} ({1}) has been found :)",
-                    new Object[] {currentId, net.getNetwork().getNet().getValue()});
+                    new Object[] {currentId, net.getNetwork().getValue()});
         } catch (Exception ex) {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
@@ -256,7 +256,7 @@ public class JPAIntegrationTest {
             for(int i=0; i<count; i++) {
                 int index = (int) Math.round(Math.random() * (validAddresses.length - 1));
                 String addr = validAddresses[index];
-                AdvancedNetworkEntity net = new AdvancedNetworkEntity(new Network(addr));
+                AdvancedNetworkEntity net = new AdvancedNetworkEntity(new IPNetwork(addr));
                 em.persist(net);
             }
 

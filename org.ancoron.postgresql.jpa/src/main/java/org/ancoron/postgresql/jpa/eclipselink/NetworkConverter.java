@@ -22,13 +22,14 @@ import java.sql.SQLException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.ancoron.postgresql.jpa.Network;
+import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.cache.ThreadLocalNetworkCache;
 import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.internal.sessions.ArrayRecord;
 import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.sessions.Session;
+import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
 import org.postgresql.util.PGobject;
 
@@ -41,7 +42,7 @@ import org.postgresql.util.PGobject;
  * 
  * <pre>
  * // ...
- * import org.ancoron.postgresql.jpa.Network;
+ * import org.ancoron.postgresql.jpa.IPNetwork;
  * import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
  * 
  * // ...
@@ -54,7 +55,7 @@ import org.postgresql.util.PGobject;
  * 
  *     &#064;Convert("networkConverter")
  *     &#064;Column(name="c_network")
- *     private Network network;
+ *     private IPNetwork network;
  * 
  *     // ...
  * }
@@ -72,7 +73,7 @@ import org.postgresql.util.PGobject;
  * <li><tt>masklen</tt> (extract netmask length)</li>
  * <li><tt>netmask</tt> (construct netmask for network)</li>
  * </ul>
- * This data is stored inside the {@link Network} instance.
+ * This data is stored inside the {@link IPNetwork} instance.
  * </p>
  * 
  * <p>
@@ -98,7 +99,7 @@ import org.postgresql.util.PGobject;
  *
  * @author ancoron
  * 
- * @see Network
+ * @see IPNetwork
  * @see NetworkCache
  */
 public class NetworkConverter implements Converter {
@@ -111,7 +112,7 @@ public class NetworkConverter implements Converter {
             + "host(hostmask(n.nw)) as hostmask, "
             + "masklen(n.nw) as masklength, "
             + "host(netmask(n.nw)) as netmask "
-            + "FROM (SELECT inet '";
+            + "FROM (SELECT cidr '";
     private static final String SELECT_EXTENDED_POSTFIX = "' as nw) n";
     private static Class cc = null;
     private NetworkCache localCache = null;
@@ -156,16 +157,16 @@ public class NetworkConverter implements Converter {
     }
 
     @Override
-    public PGinet convertObjectValueToDataValue(Object objectValue, Session session) {
+    public PGcidr convertObjectValueToDataValue(Object objectValue, Session session) {
         if (objectValue == null) {
             return null;
-        } else if (objectValue instanceof Network) {
-            return ((Network) objectValue).getNet();
-        } else if (objectValue instanceof PGinet) {
-            return (PGinet) objectValue;
+        } else if (objectValue instanceof IPNetwork) {
+            return (IPNetwork) objectValue;
+        } else if (objectValue instanceof PGcidr) {
+            return (PGcidr) objectValue;
         } else if (objectValue instanceof String) {
             try {
-                return new PGinet((String) objectValue);
+                return new PGcidr((String) objectValue);
             } catch (SQLException ex) {
                 throw new IllegalArgumentException("Unable to convert an object value", ex);
             }
@@ -177,33 +178,33 @@ public class NetworkConverter implements Converter {
     }
 
     @Override
-    public Network convertDataValueToObjectValue(Object dataValue, Session session) {
-        Network net = null;
+    public IPNetwork convertDataValueToObjectValue(Object dataValue, Session session) {
+        IPNetwork net = null;
         if (dataValue == null) {
             return net;
-        } else if (dataValue instanceof PGinet) {
-            net = new Network((PGinet) dataValue);
+        } else if (dataValue instanceof PGcidr) {
+            net = new IPNetwork((PGcidr) dataValue);
         } else if (dataValue instanceof PGobject) {
             // this is a fallback in case special JDBC types are not available...
-            net = new Network(((PGobject) dataValue).getValue());
+            net = new IPNetwork(((PGobject) dataValue).getValue());
         }
 
         if (net == null) {
             throw new IllegalArgumentException("Unable to convert data value of type "
                     + dataValue.getClass().getName() + " into a "
-                    + Network.class.getName());
+                    + IPNetwork.class.getName());
         }
 
-        final Object[] cached = getCache().get(net.getNet().getValue());
+        final Object[] cached = getCache().get(net.getValue());
 
         if (cached[0] == null) {
             // only query for unknown networks...
             Vector res = session.executeSQL(
                     SELECT_EXTENDED_PREFIX
-                    + net.getNet().getValue()
+                    + net.getValue()
                     + SELECT_EXTENDED_POSTFIX);
 
-            // System.out.println("Network initialize result: " + res);
+            // System.out.println("IPNetwork initialize result: " + res);
 
             ArrayRecord rec = (ArrayRecord) res.get(0);
             boolean ipv6 = rec.get("family").equals("6");
@@ -212,30 +213,27 @@ public class NetworkConverter implements Converter {
 
             // all IP addresses returned are literal IPs...
             try {
-                byte[] broadcast = InetAddress.getByName((String) rec.get("broadcast")).getAddress();
-                net.setBroadcast(broadcast);
+                InetAddress bc = InetAddress.getByName((String) rec.get("broadcast"));
+                byte[] broadcast = bc.getAddress();
+                net.setBroadcastAddress(broadcast);
                 cached[1] = broadcast;
 
-                InetAddress host = InetAddress.getByName((String) rec.get("host"));
-                net.setHost(host);
-                cached[2] = host;
-
                 byte[] hostmask = InetAddress.getByName((String) rec.get("hostmask")).getAddress();
-                net.setHostmask(hostmask);
-                cached[3] = hostmask;
+                net.setHostmaskAddress(hostmask);
+                cached[2] = hostmask;
 
                 short maskLength = ((Integer) rec.get("masklength")).shortValue();
                 net.setMaskLength(maskLength);
-                cached[4] = Short.valueOf(maskLength);
+                cached[3] = Short.valueOf(maskLength);
 
                 byte[] netmask = InetAddress.getByName((String) rec.get("netmask")).getAddress();
-                net.setNetmask(netmask);
-                cached[5] = netmask;
+                net.setNetmaskAddress(netmask);
+                cached[4] = netmask;
 
-                getCache().put(net.getNet().getValue(), cached);
+                getCache().put(net.getValue(), cached);
             } catch (UnknownHostException x) {
                 throw new IllegalArgumentException("Unable to fill extended values for the "
-                        + Network.class.getName() + " using value " + net.getNet().getValue(), x);
+                        + IPNetwork.class.getName() + " using value " + net.getValue(), x);
             }
 
             res = null;

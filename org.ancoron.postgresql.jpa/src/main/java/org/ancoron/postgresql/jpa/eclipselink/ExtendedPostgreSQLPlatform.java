@@ -17,6 +17,7 @@ package org.ancoron.postgresql.jpa.eclipselink;
 
 import java.net.InetAddress;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Hashtable;
@@ -24,13 +25,16 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.ancoron.postgresql.jpa.Network;
+import org.ancoron.postgresql.jpa.IPNetwork;
+import org.ancoron.postgresql.jpa.IPTarget;
 import org.eclipse.persistence.internal.databaseaccess.BindCallCustomParameter;
 import org.eclipse.persistence.internal.databaseaccess.FieldTypeDefinition;
 import org.eclipse.persistence.internal.helper.ConversionManager;
 import org.eclipse.persistence.internal.helper.DatabaseField;
+import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.platform.database.PostgreSQLPlatform;
 import org.eclipse.persistence.queries.Call;
+import org.postgresql.core.BaseConnection;
 import org.postgresql.jdbc2.AbstractJdbc2Connection;
 import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
@@ -49,12 +53,12 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
     private static final Class INET = PGinet.class;
     private static final Class MACADDR = PGmacaddr.class;
     
-    private boolean isConnectionDataInitialized = false;
-    
     private static final int TYPE_CIDR = 60001;
     private static final int TYPE_INET = 60002;
     private static final int TYPE_MAC = 60003;
     private static final int TYPE_NET = 60004;
+
+    private boolean isConnectionDataInitialized = false;
 
     @Override
     public int getJDBCType(Class javaType) {
@@ -64,7 +68,7 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
             return TYPE_CIDR;
         } else if(javaType == MACADDR) {
             return TYPE_MAC;
-        } else if(javaType == Network.class) {
+        } else if(javaType == IPNetwork.class) {
             return TYPE_NET;
         }
         return super.getJDBCType(javaType);
@@ -72,8 +76,8 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
 
     @Override
     public int getJDBCType(DatabaseField field) {
-        if(Network.class.isAssignableFrom(field.getType())) {
-            return Types.OTHER;
+        if(IPNetwork.class.isAssignableFrom(field.getType())) {
+            return TYPE_NET;
         }
         return super.getJDBCType(field);
     }
@@ -84,19 +88,12 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
     }
 
     @Override
-    public ConversionManager getConversionManager() {
-        return super.getConversionManager();
-    }
-
-    
-    
-    @Override
     protected Hashtable buildFieldTypes() {
         Hashtable fieldTypeMapping = super.buildFieldTypes();
         
         log.info("Generating FieldTypeMapping for PostgreSQL specific network data types");
 
-        fieldTypeMapping.put(Network.class, new FieldTypeDefinition("INET", false));
+        fieldTypeMapping.put(IPNetwork.class, new FieldTypeDefinition("INET", false));
         fieldTypeMapping.put(INET, new FieldTypeDefinition("INET", false));
         fieldTypeMapping.put(CIDR, new FieldTypeDefinition("CIDR", false));
         fieldTypeMapping.put(MACADDR, new FieldTypeDefinition("MACADDR", false));
@@ -113,8 +110,8 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
         log.info("Generating ClassTypes for PostgreSQL specific network data types");
 
         // Key the Map the other way for table creation.
-        classTypeMapping.put("INET", Network.class);
-        classTypeMapping.put("CIDR", Network.class);
+        classTypeMapping.put("INET", IPNetwork.class);
+        classTypeMapping.put("CIDR", IPNetwork.class);
         classTypeMapping.put("MACADDR", MACADDR);
 
         return classTypeMapping;
@@ -126,9 +123,22 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
             return;
         }
 
+        AbstractJdbc2Connection conn = null;
         if(connection instanceof AbstractJdbc2Connection) {
-            AbstractJdbc2Connection conn = (AbstractJdbc2Connection) connection;
-            
+            conn = (AbstractJdbc2Connection) connection;
+        } else {
+            try {
+                conn = (AbstractJdbc2Connection) connection.unwrap(BaseConnection.class);
+            } catch(SQLException x) {
+                log.log(Level.WARNING, "Unable to unwrap JDBC connection", x);
+                conn = null;
+            } catch(ClassCastException x) {
+                log.log(Level.WARNING, "Unable to unwrap JDBC connection", x);
+                conn = null;
+            }
+        }
+        
+        if(conn != null) {
             try {
                 conn.addDataType("CIDR", CIDR);
                 conn.addDataType("INET", INET);
@@ -137,19 +147,21 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
             } catch (SQLException ex) {
                 log.log(Level.WARNING, "Unable to add networking extensions", ex);
             }
-            
-
-            this.isConnectionDataInitialized = true;
         } else {
             log.log(Level.WARNING, "JDBC Connection is not an expected one: {0}",
                     connection.getClass().getName());
         }
+
+        // don't try again on the same connection...
+        this.isConnectionDataInitialized = true;
     }
 
     @Override
     public boolean shouldUseCustomModifyForCall(DatabaseField field) {
         Class type = field.getType();
-        if ((type != null) && PGobject.class.isAssignableFrom(type)) {
+        if ((type != null) && (PGobject.class.isAssignableFrom(type)
+                || type == IPNetwork.class || type == IPTarget.class))
+        {
             return true;
         }
         return super.shouldUseCustomModifyForCall(field);
@@ -163,7 +175,11 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
                 return null;
             }
 
-            if (INET.equals(type)) {
+            if(IPNetwork.class.isAssignableFrom(type)) {
+                value = convertToCidr((IPNetwork) value);
+            } else if (IPTarget.class.isAssignableFrom(type)) {
+                value = convertToInet((IPTarget) value);
+            } else if (INET.equals(type)) {
                 value = convertToInet(value);
             } else if (CIDR.equals(type)) {
                 value = convertToCidr(value);
@@ -184,10 +200,9 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
         }
         
         if(value != null) {
-            if((value instanceof Network)
-                || (value instanceof PGinet)) {
+            if((value instanceof IPTarget) || (value instanceof PGinet)) {
                 return convertToInet(value);
-            } else if((value instanceof PGcidr)) {
+            } else if((value instanceof IPNetwork) || (value instanceof PGcidr)) {
                 return convertToCidr(value);
             } else if((value instanceof PGmacaddr)) {
                 return convertToMac(value);
@@ -221,8 +236,8 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
         PGinet inet = null;
         if(value != null) {
             try {
-                if(value instanceof Network) {
-                    inet = ((Network) value).getNet();
+                if(value instanceof IPTarget) {
+                    inet = (IPTarget) value;
                 } else if(value instanceof PGinet) {
                     inet = (PGinet) value;
                 } else if(value instanceof PGcidr) {
@@ -247,8 +262,8 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
         PGcidr cidr = null;
         if(value != null) {
             try {
-                if(value instanceof Network) {
-                    cidr = new PGcidr(((Network) value).getNet().getValue());
+                if(value instanceof IPNetwork) {
+                    cidr = (IPNetwork) value;
                 } else if(value instanceof PGcidr) {
                     cidr = (PGcidr) value;
                 } else if(value instanceof PGinet) {
@@ -271,7 +286,7 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
     
     protected Vector buildToInetVec() {
         Vector vec = new Vector();
-        vec.addElement(Network.class);
+        vec.addElement(IPTarget.class);
         vec.addElement(String.class);
         vec.addElement(InetAddress.class);
         vec.addElement(INET);
@@ -280,9 +295,8 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
 
     protected Vector buildToCidrVec() {
         Vector vec = new Vector();
-        vec.addElement(Network.class);
+        vec.addElement(IPNetwork.class);
         vec.addElement(String.class);
-        vec.addElement(InetAddress.class);
         vec.addElement(CIDR);
         return vec;
     }
@@ -307,8 +321,9 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
         }
 
         dataTypes = super.getDataTypesConvertedFrom(javaClass);
-        if ((javaClass == Network.class) || (javaClass == InetAddress.class)) {
+        if ((javaClass == IPTarget.class) || (javaClass == InetAddress.class)) {
             dataTypes.addElement(INET);
+        } else if ((javaClass == IPNetwork.class)) {
             dataTypes.addElement(CIDR);
         }
 
@@ -327,10 +342,10 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
             return dataTypes;
         }
 
-        if (javaClass == INET) {
-            dataTypes = buildToInetVec();
-        } else if (javaClass == CIDR) {
+        if(javaClass == CIDR || IPNetwork.class.isAssignableFrom(javaClass)) {
             dataTypes = buildToCidrVec();
+        } else if (javaClass == INET || IPTarget.class.isAssignableFrom(javaClass)) {
+            dataTypes = buildToInetVec();
         } else if (javaClass == MACADDR) {
             dataTypes = buildToMacaddrVec();
         } else {

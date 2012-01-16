@@ -15,6 +15,7 @@
  */
 package org.ancoron.postgresql.test.glassfish;
 
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -32,6 +33,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.transaction.UserTransaction;
+import org.postgresql.net.PGinet;
 import org.postgresql.util.PGobject;
 
 /**
@@ -57,9 +59,12 @@ public class NetworkTestBean {
     @Timeout
     protected void startTests()
     {
-        NetworkTestEntity entity = new NetworkTestEntity("192.168.1.1/24");
+        String table = NetworkTestEntity.class.getAnnotation(Table.class).name();
 
-        Long id = null;
+        NetworkTestEntity entity = new NetworkTestEntity("192.168.1.0/24");
+        entity.setUuid(UUID.randomUUID().toString());
+
+        String uuid = null;
         try {
             // try to save...
             log.info("Persisting network test entity...");
@@ -67,8 +72,8 @@ public class NetworkTestBean {
             em.persist(entity);
             utx.commit();
             
-            id = entity.getId();
-            log.log(Level.INFO, "Entity got ID {0}", id);
+            uuid = entity.getUuid();
+            log.log(Level.INFO, "Entity with UUID {0} has been persisted", uuid);
         } catch(Exception x) {
             log.log(Level.WARNING, "Test failed:", x);
             try {
@@ -76,7 +81,7 @@ public class NetworkTestBean {
             } catch(Exception e) {}
         }
 
-        if(id == null) {
+        if(uuid == null) {
             return;
         }
 
@@ -84,7 +89,7 @@ public class NetworkTestBean {
             // try to save...
             log.info("Loading network test entity using EntityManager...");
             utx.begin();
-            entity = em.find(NetworkTestEntity.class, id);
+            entity = em.find(NetworkTestEntity.class, uuid);
             utx.commit();
             
             log.log(Level.INFO, "Got entity {0}", entity);
@@ -99,23 +104,36 @@ public class NetworkTestBean {
             // try to save...
             log.info("Loading network test entity using native query...");
             
-            String table = NetworkTestEntity.class.getAnnotation(Table.class).name();
             String column = NetworkTestEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
 
             utx.begin();
-            Query query = em.createNativeQuery("SELECT e.c_id, e.c_network FROM "
+            Query query = em.createNativeQuery("SELECT e.c_uuid, e.c_network FROM "
                     + table + " e WHERE e." + column + " >>= #IPADDR");
-            query.setParameter("IPADDR", entity.getNetwork().getNet());
+            query.setParameter("IPADDR", new PGinet("192.168.1.25"));
             
             // entity = (NetworkTestEntity) query.getSingleResult();
             Object[] res = (Object[]) query.getSingleResult();
             entity = new NetworkTestEntity(((PGobject) res[1]).getValue());
-            entity.setId((Long) res[0]);
+            entity.setUuid((String) res[0]);
             utx.commit();
             
             log.log(Level.INFO, "Got entity {0}", entity);
         } catch(Exception x) {
             log.log(Level.WARNING, "Test failed:", x);
+            try {
+                utx.rollback();
+            } catch(Exception e) {}
+        }
+        
+        // cleanup after test...
+        try {
+            utx.begin();
+            em.createNativeQuery("DROP TABLE " + table).executeUpdate();
+            utx.commit();
+            
+            log.log(Level.INFO, "Cleanup done.");
+        } catch(Exception x) {
+            log.log(Level.WARNING, "Cleanup failed!", x);
             try {
                 utx.rollback();
             } catch(Exception e) {}

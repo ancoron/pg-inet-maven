@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-  <persistence-unit name="NetworkTestPU" transaction-type="JTA">
-    <jta-data-source>java:app/jdbc/NetworkTestDS</jta-data-source>
-    <class>org.ancoron.postgresql.test.glassfish.NetworkTestEntity</class>
-    <exclude-unlisted-classes>true</exclude-unlisted-classes>
-    <properties>
-      <!--
+    <persistence-unit name="NetworkTestPU" transaction-type="JTA">
+        <jta-data-source>java:app/jdbc/NetworkTestDS</jta-data-source>
+        <class>org.ancoron.postgresql.test.glassfish.NetworkTestEntity</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <!--
             <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
-            <property name="eclipselink.target-database" value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
             -->
-      <property name="eclipselink.logging.logger" value="JavaLogger"/>
-      <property name="eclipselink.logging.level" value="INFO"/>
-      <property name="eclipselink.logging.parameters" value="true"/>
-      <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
-      <property name="connection.autocommit" value="false"/>
-      <property name="eclipselink.persistence-context.flush-mode" value="COMMIT"/>
-      <property name="eclipselink.jdbc.batch-writing" value="JDBC"/>
-      <!--
+            <property name="eclipselink.target-database" value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
+            <property name="eclipselink.logging.logger" value="JavaLogger"/>
+            <property name="eclipselink.logging.level" value="FINE"/>
+            <property name="eclipselink.logging.parameters" value="true"/>
+            <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>
+            <property name="connection.autocommit" value="false"/>
+            <property name="eclipselink.persistence-context.flush-mode" value="COMMIT"/>
+            <property name="eclipselink.jdbc.batch-writing" value="JDBC"/>
+            <!--
             <property name="eclipselink.profiler" value="PerformanceProfiler"/>
             -->
-    </properties>
-  </persistence-unit>
+        </properties>
+    </persistence-unit>
 </persistence>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 ancoron.
+ * Copyright 2011-2012 ancoron.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,69 +16,79 @@
 package org.ancoron.postgresql.jpa;
 
 import java.io.Serializable;
-import java.net.InetAddress;
+import java.math.BigInteger;
 import java.sql.SQLException;
-import org.postgresql.net.PGinet;
+import java.util.Arrays;
+import org.postgresql.net.PGcidr;
 
 /**
  *
  * @author ancoron
  */
-public class Network implements Serializable {
+public class IPNetwork extends PGcidr implements Serializable, Cloneable, Comparable<IPNetwork> {
 
-    private PGinet net = null;
-    private byte[] broadcast;
-    private InetAddress host;
-    private byte[] hostmask;
+    private byte[] broadcastAddress;
+    private byte[] hostmaskAddress;
     private short maskLength;
-    private byte[] netmask;
+    private byte[] netmaskAddress;
     
-    private boolean v6;
+    private boolean v6 = false;
     
-    public Network() {}
-    
-    public Network(PGinet net) {
-        this.net = net;
+    public IPNetwork() {
+        super();
     }
     
-    public Network(String net) {
-        try {
-            this.net = new PGinet(net);
-        } catch (SQLException ex) {
-            throw new IllegalArgumentException("Unable to construct network", ex);
+    public IPNetwork(PGcidr net) {
+        this();
+        
+        if(net != null) {
+            try {
+                setValue(net.getValue());
+            } catch (SQLException ex) {
+                throw new IllegalArgumentException(
+                        "Unable to create Network instance from given PGinet "
+                        + net.toString(), ex);
+            }
+        }
+    }
+    
+    public IPNetwork(String net) {
+        this();
+
+        if(net != null) {
+            try {
+                setValue(net);
+            } catch (SQLException ex) {
+                throw new IllegalArgumentException("Unable to construct network", ex);
+            }
         }
     }
 
-    public PGinet getNet() {
-        return net;
+    @Override
+    public void setValue(String v) throws SQLException {
+        super.setValue(v);
+        
+        init();
+    }
+    
+    public final void init() {
+        v6 = addr != null && addr.length == 16;
     }
 
-    public void setNet(PGinet net) {
-        this.net = net;
+    public byte[] getBroadcastAddress() {
+        return broadcastAddress;
     }
 
-    public byte[] getBroadcast() {
-        return broadcast;
+    public void setBroadcastAddress(byte[] broadcastAddress) {
+        this.broadcastAddress = broadcastAddress;
     }
 
-    public void setBroadcast(byte[] broadcast) {
-        this.broadcast = broadcast;
+    public byte[] getHostmaskAddress() {
+        return hostmaskAddress;
     }
 
-    public InetAddress getHost() {
-        return host;
-    }
-
-    public void setHost(InetAddress host) {
-        this.host = host;
-    }
-
-    public byte[] getHostmask() {
-        return hostmask;
-    }
-
-    public void setHostmask(byte[] hostmask) {
-        this.hostmask = hostmask;
+    public void setHostmaskAddress(byte[] hostmaskAddress) {
+        this.hostmaskAddress = hostmaskAddress;
     }
 
     public short getMaskLength() {
@@ -89,12 +99,12 @@ public class Network implements Serializable {
         this.maskLength = maskLength;
     }
 
-    public byte[] getNetmask() {
-        return netmask;
+    public byte[] getNetmaskAddress() {
+        return netmaskAddress;
     }
 
-    public void setNetmask(byte[] netmask) {
-        this.netmask = netmask;
+    public void setNetmaskAddress(byte[] netmaskAddress) {
+        this.netmaskAddress = netmaskAddress;
     }
 
     public boolean isV6() {
@@ -106,7 +116,104 @@ public class Network implements Serializable {
     }
 
     @Override
-    public String toString() {
-        return net != null ? net.toString() : "null";
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final IPNetwork other = (IPNetwork) obj;
+
+        if (this.netmask != other.netmask) {
+            return false;
+        }
+
+        if (!Arrays.equals(this.addr, other.addr)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 17 * hash + Arrays.hashCode(this.addr);
+        hash = 17 * hash + this.netmask;
+        return hash;
+    }
+
+    @Override
+    public int compareTo(IPNetwork o) {
+        if(o == null) {
+            return 1;
+        }
+        
+        if(this.equals(o)) {
+            return 0;
+        }
+        
+        BigInteger alow = new BigInteger(1, low());
+        BigInteger ahigh = new BigInteger(1, high());
+        BigInteger a = alow.add(ahigh);
+
+        BigInteger blow = new BigInteger(1, o.low());
+        BigInteger bhigh = new BigInteger(1, o.high());
+        BigInteger b = blow.add(bhigh);
+
+        return a.compareTo(b);
+    }
+    
+    protected byte[] high() {
+        byte[] hi = new byte[addr.length];
+        int i = netmask / 8;
+        int s = 8 - (netmask % 8);
+        System.arraycopy(addr, 0, hi, 0, i);
+        // set least significant bits...
+        if(s > 0 && s < 8) {
+            byte b = (byte) addr[i];
+            for(int j=0; j<s; j++) {
+                b = (byte) (b | (1 << j));
+            }
+            hi[i] = b;
+        }
+        for(int j = ((s == 8) ? i : i+1); j < hi.length; j++) {
+            hi[j] = (byte) 255;
+        }
+        return hi;
+    }
+
+    protected byte[] low() {
+        byte[] low = new byte[addr.length];
+        int i = netmask / 8;
+        int s = 8 - (netmask % 8);
+        System.arraycopy(addr, 0, low, 0, i);
+
+        // unset least significant bits...
+        if(s > 0 && s < 8) {
+            byte b = (byte) addr[i];
+            for(int j=0; j<s; j++) {
+                b = (byte) (b & ~(1 << j));
+            }
+            low[i] = b;
+        }
+        return low;
+    }
+    
+    public IPTarget getHighestTarget() {
+        byte[] hi = high();
+        
+        return new IPTarget(hi);
+    }
+    
+    public IPTarget getLowestTarget() {
+        byte[] low = low();
+        
+        return new IPTarget(low);
+    }
+
+    public boolean contains(IPTarget ip) {
+        return getLowestTarget().compareTo(ip) <= 0
+                && getHighestTarget().compareTo(ip) >= 0;
     }
 }

@@ -18,11 +18,9 @@ package org.ancoron.postgresql.test.glassfish;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import org.ancoron.postgresql.jpa.Network;
+import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
@@ -37,34 +35,33 @@ import org.eclipse.persistence.annotations.Converter;
 public class NetworkTestEntity implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name="c_id")
-    private Long id;
+    @Column(name="c_uuid")
+    private String uuid;
     
     @Column(name="c_network", nullable=false)
     @Convert("netConverter")
-    private Network network;
+    private IPNetwork network;
 
     public NetworkTestEntity() {
     }
     
     public NetworkTestEntity(String net) {
-        this.network = new Network(net);
+        this.network = new IPNetwork(net);
     }
 
-    public Long getId() {
-        return id;
+    public String getUuid() {
+        return uuid;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
-    public Network getNetwork() {
+    public IPNetwork getNetwork() {
         return network;
     }
 
-    public void setNetwork(Network network) {
+    public void setNetwork(IPNetwork network) {
         this.network = network;
     }
     

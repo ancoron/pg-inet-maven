@@ -45,7 +45,7 @@ public class ThreadLocalNetworkCache extends NetworkCache {
         Object[] res = internal.get(net);
 
         if (res == null) {
-            res = new Object[6];
+            res = new Object[5];
         }
 
         return res;

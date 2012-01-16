@@ -22,7 +22,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import org.ancoron.postgresql.jpa.Network;
+import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
@@ -43,12 +43,12 @@ public class NetworkEntity implements Serializable {
     
     @Column(name="c_network", nullable=false)
     @Convert("netConverter")
-    private Network network;
+    private IPNetwork network;
 
     public NetworkEntity() {
     }
     
-    public NetworkEntity(Network network) {
+    public NetworkEntity(IPNetwork network) {
         this.network = network;
     }
 
@@ -60,11 +60,11 @@ public class NetworkEntity implements Serializable {
         this.id = id;
     }
 
-    public Network getNetwork() {
+    public IPNetwork getNetwork() {
         return network;
     }
 
-    public void setNetwork(Network network) {
+    public void setNetwork(IPNetwork network) {
         this.network = network;
     }
     

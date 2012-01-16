@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
-        <version>8.4.702.jdbc4-1-SNAPSHOT</version>
+        <version>8.4.702.jdbc4.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>org.ancoron.postgresql.test.glassfish</artifactId>
@@ -40,7 +40,6 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>

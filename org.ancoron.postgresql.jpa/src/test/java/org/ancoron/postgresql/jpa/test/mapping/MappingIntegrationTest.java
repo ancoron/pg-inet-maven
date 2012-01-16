@@ -26,7 +26,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.Table;
-import org.ancoron.postgresql.jpa.Network;
+import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.test.TestUtil;
 import org.junit.Test;
 import org.junit.AfterClass;
@@ -83,18 +83,18 @@ public class MappingIntegrationTest {
             // testing persist() ...
             em.getTransaction().begin();
 
-            NetworkEntity net = new NetworkEntity(new Network("10.10.0.0/16"));
+            NetworkEntity net = new NetworkEntity(new IPNetwork("10.10.0.0/16"));
             
             em.persist(net);
             Assert.assertTrue(em.contains(net));
 
             em.getTransaction().commit();
             Assert.assertNotNull("NetworkEntity with PGinet "
-                    + net.getNetwork().getNet().getValue() + " was not persisted",
+                    + net.getNetwork().getValue() + " was not persisted",
                     net.getId());
 
             log.log(Level.INFO, "NetworkEntity with PGinet {0} has been persisted :)",
-                    net.getNetwork().getNet().getValue());
+                    net.getNetwork().getValue());
 
             Long currentId = net.getId();
             
@@ -113,7 +113,7 @@ public class MappingIntegrationTest {
             Assert.assertTrue(em.contains(net));
 
             log.log(Level.INFO, "NetworkEntity with ID {0} ({1}) has been found :)",
-                    new Object[] {currentId, net.getNetwork().getNet().getValue()});
+                    new Object[] {currentId, net.getNetwork().getValue()});
             
             // testing query...
             em.getTransaction().begin();
@@ -121,7 +121,7 @@ public class MappingIntegrationTest {
             String table = NetworkEntity.class.getAnnotation(Table.class).name();
             String column = NetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
             Query q = em.createNativeQuery("SELECT * FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
-            q.setParameter("IPADDR", new PGinet("10.10.1.6"));
+            q.setParameter("IPADDR", new IPNetwork("10.10.1.6"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
@@ -131,11 +131,11 @@ public class MappingIntegrationTest {
             // net = (NetworkEntity) networks.get(0);
             // Assert.assertTrue(em.contains(net));
             Object[] o = (Object[]) networks.get(0);
-            net = new NetworkEntity(new Network(((PGobject) o[1]).getValue()));
+            net = new NetworkEntity(new IPNetwork(((PGobject) o[1]).getValue()));
             net.setId((Long) o[0]);
 
             log.log(Level.INFO, "NetworkEntity with ID {0} ({1}) has been found :)",
-                    new Object[] {currentId, net.getNetwork().getNet().getValue()});
+                    new Object[] {currentId, net.getNetwork().getValue()});
         } catch (Exception ex) {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
