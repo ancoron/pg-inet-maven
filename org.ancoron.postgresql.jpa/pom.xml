@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
-        <version>8.4.702.jdbc4-1-SNAPSHOT</version>
+        <version>8.4.702.jdbc4.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>org.ancoron.postgresql.jpa</artifactId>
@@ -49,7 +49,6 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}</finalName>
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>
@@ -80,7 +79,7 @@
                             ${project.artifactId}*
                         </Export-Package>
                         <Import-Package>
-                            org.eclipse*;resolution:=optional,
+                            org.eclipse*;resolution:=optional;version="[\$(version;=;\$(@)),\$(version;+;\$(@)))",
                             *
                         </Import-Package>
                     </instructions>

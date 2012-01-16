@@ -10,7 +10,7 @@
 
     <groupId>org.ancoron.postgresql</groupId>
     <artifactId>pginet-parent</artifactId>
-    <version>8.4.702.jdbc4-1-SNAPSHOT</version>
+    <version>8.4.702.jdbc4.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>PostgreSQL Network Types Parent</name>
@@ -18,6 +18,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+        <patch.version>1</patch.version>
         <postgresql.base.version>8.4-702</postgresql.base.version>
         <jdbc.type>4</jdbc.type>
         <postgresql.version>${postgresql.base.version}.jdbc${jdbc.type}</postgresql.version>
@@ -125,7 +126,7 @@
     </dependencyManagement>
     
     <build>
-        <finalName>${project.artifactId}</finalName>
+        <finalName>${project.artifactId}-${ver.majorVersion}.${ver.minorVersion}.${patch.version}-jdbc${jdbc.type}</finalName>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -205,8 +206,8 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-                        <Bundle-Version>${ver.majorVersion}.${ver.minorVersion}.${ver.incrementalVersion}.jdbc${jdbc.type}</Bundle-Version>
-                        <_versionpolicy>[$(version;===;$(@)),$(version;=+;$(@)))</_versionpolicy>
+                        <Bundle-Version>${ver.majorVersion}.${ver.minorVersion}.${ver.incrementalVersion}.jdbc${jdbc.type}_${patch.version}</Bundle-Version>
+                        <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
                     </instructions>
                 </configuration>
             </plugin>
