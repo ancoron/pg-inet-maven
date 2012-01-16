@@ -104,6 +104,10 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         return host;
     }
 
+    public byte[] getAddr() {
+        return addr;
+    }
+
     public void setHost(InetAddress host) {
         this.host = host;
     }
