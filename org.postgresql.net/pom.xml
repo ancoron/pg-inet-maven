@@ -71,7 +71,7 @@
                         </Import-Package>
                         <Bundle-License>http://jdbc.postgresql.org/license.html</Bundle-License>
                         <Original-Author>Russel Francis &lt;russ@metro-six.com&gt;</Original-Author>
-                        <Bundle-DocURL></Bundle-DocURL>
+                        <Bundle-DocURL>http://www.metro-six.com/products/labs/pg-inet-types</Bundle-DocURL>
                     </instructions>
                 </configuration>
                 <executions>
