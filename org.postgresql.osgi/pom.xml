@@ -20,6 +20,18 @@
         <dependency>
             <groupId>postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>4.2.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.enterprise</artifactId>
+            <version>4.2.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -62,6 +74,7 @@
                             <includes>META-INF/services/*</includes>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
+                            <includeScope>compile</includeScope>
                         </configuration>
                     </execution>
                 </executions>
@@ -74,12 +87,16 @@
                     <instructions>
                         <!-- explicit upstream license -->
                         <Bundle-License>http://jdbc.postgresql.org/license.html</Bundle-License>
+                        <Bundle-DocURL>http://jdbc.postgresql.org/</Bundle-DocURL>
                         <Export-Package>
                             org.postgresql*
                         </Export-Package>
                         <Include-Resource>
                             META-INF=${project.build.outputDirectory}/META-INF
                         </Include-Resource>
+                        <Bundle-Activator>
+                            org.postgresql.osgi.impl.PostgreSQLActivator
+                        </Bundle-Activator>
                     </instructions>
                 </configuration>
             </plugin>
