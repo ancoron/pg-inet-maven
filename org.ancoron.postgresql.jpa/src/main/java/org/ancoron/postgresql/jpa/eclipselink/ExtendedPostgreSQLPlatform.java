@@ -16,26 +16,21 @@
 package org.ancoron.postgresql.jpa.eclipselink;
 
 import java.net.InetAddress;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.IPTarget;
+import org.eclipse.persistence.internal.databaseaccess.Accessor;
 import org.eclipse.persistence.internal.databaseaccess.BindCallCustomParameter;
+import org.eclipse.persistence.internal.databaseaccess.ConnectionCustomizer;
 import org.eclipse.persistence.internal.databaseaccess.FieldTypeDefinition;
-import org.eclipse.persistence.internal.helper.ConversionManager;
 import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.internal.sessions.AbstractSession;
 import org.eclipse.persistence.platform.database.PostgreSQLPlatform;
 import org.eclipse.persistence.queries.Call;
-import org.postgresql.core.BaseConnection;
-import org.postgresql.jdbc2.AbstractJdbc2Connection;
 import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
 import org.postgresql.net.PGmacaddr;
@@ -49,16 +44,14 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
 
     private static final Logger log = Logger.getLogger(ExtendedPostgreSQLPlatform.class.getName());
     
-    private static final Class CIDR = PGcidr.class;
-    private static final Class INET = PGinet.class;
-    private static final Class MACADDR = PGmacaddr.class;
+    static final Class CIDR = PGcidr.class;
+    static final Class INET = PGinet.class;
+    static final Class MACADDR = PGmacaddr.class;
     
     private static final int TYPE_CIDR = 60001;
     private static final int TYPE_INET = 60002;
     private static final int TYPE_MAC = 60003;
     private static final int TYPE_NET = 60004;
-
-    private boolean isConnectionDataInitialized = false;
 
     @Override
     public int getJDBCType(Class javaType) {
@@ -116,46 +109,12 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
 
         return classTypeMapping;
     }
-    
+
     @Override
-    public void initializeConnectionData(Connection connection) throws SQLException {
-        if (this.isConnectionDataInitialized || (connection == null) || (connection.getMetaData() == null)) {
-            return;
-        }
-
-        AbstractJdbc2Connection conn = null;
-        if(connection instanceof AbstractJdbc2Connection) {
-            conn = (AbstractJdbc2Connection) connection;
-        } else {
-            try {
-                conn = (AbstractJdbc2Connection) connection.unwrap(BaseConnection.class);
-            } catch(SQLException x) {
-                log.log(Level.WARNING, "Unable to unwrap JDBC connection", x);
-                conn = null;
-            } catch(ClassCastException x) {
-                log.log(Level.WARNING, "Unable to unwrap JDBC connection", x);
-                conn = null;
-            }
-        }
-        
-        if(conn != null) {
-            try {
-                conn.addDataType("CIDR", CIDR);
-                conn.addDataType("INET", INET);
-                conn.addDataType("MACADDR", MACADDR);
-                log.info("JDBC Connection prepared for PostgreSQL specific network data types");
-            } catch (SQLException ex) {
-                log.log(Level.WARNING, "Unable to add networking extensions", ex);
-            }
-        } else {
-            log.log(Level.WARNING, "JDBC Connection is not an expected one: {0}",
-                    connection.getClass().getName());
-        }
-
-        // don't try again on the same connection...
-        this.isConnectionDataInitialized = true;
+    public ConnectionCustomizer createConnectionCustomizer(Accessor accessor, AbstractSession session) {
+        return new PostgreSQLConnectionCustomizer(accessor, session);
     }
-
+    
     @Override
     public boolean shouldUseCustomModifyForCall(DatabaseField field) {
         Class type = field.getType();
