@@ -249,16 +249,23 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         if(addr[0] == (byte) 255) {
             return null;
         }
+        
+        // check for loopback and any...
+        if(addr[0] == (byte) 0
+                && new BigInteger(1, this.addr).compareTo(BigInteger.ONE) <= 0)
+        {
+            return null;
+        }
 
         // make a multicast address...
-        snmc[0] = 127 & 0xFF;
+        snmc[0] = (byte) 255;
         
         // no flags but link-local scope...
         snmc[1] = 2 & 0xFF;
         
         // clear everything only leaving a 24-bit unicast part...
-        snmc[11] = 1 & 0xFF;
-        snmc[12] = 127 & 0xFF;
+        snmc[11] = (byte) 1;
+        snmc[12] = (byte) 255;
         snmc[13] = addr[13];
         snmc[14] = addr[14];
         snmc[15] = addr[15];
