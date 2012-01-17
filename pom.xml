@@ -208,6 +208,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${ver.majorVersion}.${ver.minorVersion}.${ver.incrementalVersion}.jdbc${jdbc.type}_${patch.version}</Bundle-Version>
                         <_versionpolicy>[$(version;==;$(@)),$(version;+;$(@)))</_versionpolicy>
+                        <PostgreSQL-Driver>${postgresql.version}</PostgreSQL-Driver>
                     </instructions>
                 </configuration>
             </plugin>
