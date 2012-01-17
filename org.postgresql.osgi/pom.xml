@@ -1,8 +1,6 @@
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>org.ancoron.postgresql</groupId>
         <artifactId>pginet-parent</artifactId>
@@ -10,18 +8,25 @@
     </parent>
 
     <artifactId>org.postgresql.osgi</artifactId>
-    <name>${project.artifactId} bundle</name>
-    <description>
-        This bundle simply wraps postgresql-${project.version}.jar.
-    </description>
+    <name>RFC-122 (OSGi/JDBC) compliant implementation</name>
     <packaging>bundle</packaging>
+
+    <description>
+        This OSGi bundle provides support for OSGi/JDBC aka. RFC #122 for PostgreSQL version ${postgresql.version}
+    </description>
 
     <dependencies>
         <dependency>
-            <groupId>postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>compile</scope>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.postgresql</artifactId>
+            <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>org.postgresql.net</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
@@ -32,138 +37,32 @@
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.enterprise</artifactId>
             <version>4.2.0</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>no-compile</id>
-                        <phase>process-resources</phase>
-                        <goals>
-                            <goal>clean</goal>
-                        </goals>
-                        <configuration>
-                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
-                            <filesets>
-                                <fileset>
-                                    <directory>${project.build.directory}/generated-sources</directory>
-                                </fileset>
-                            </filesets>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-upstream</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>unpack-dependencies</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <includes>META-INF/services/*</includes>
-                            <overWriteReleases>true</overWriteReleases>
-                            <overWriteSnapshots>true</overWriteSnapshots>
-                            <includeScope>compile</includeScope>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <!-- explicit upstream license -->
-                        <Bundle-License>http://jdbc.postgresql.org/license.html</Bundle-License>
-                        <Bundle-DocURL>http://jdbc.postgresql.org/</Bundle-DocURL>
                         <Export-Package>
-                            org.postgresql*
+                            org.postgresql.osgi
                         </Export-Package>
-                        <Include-Resource>
-                            META-INF=${project.build.outputDirectory}/META-INF
-                        </Include-Resource>
-                        <Bundle-Activator>
-                            org.postgresql.osgi.impl.PostgreSQLActivator
-                        </Bundle-Activator>
+                        <Private-Package>
+                            org.postgresql.osgi.impl
+                        </Private-Package>
+                        <Import-Package>
+                            !org.postgresql.osgi,
+                            org.postgresql*;version="[$(@),$(@)]",
+                            *
+                        </Import-Package>
+                        <Bundle-Activator>org.postgresql.osgi.impl.PostgreSQLActivator</Bundle-Activator>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>perform-release</id>
-            <activation>
-                <property>
-                    <name>useReleaseProfile</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-dependency-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>copy-upstream-sources</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>unpack</goal>
-                                </goals>
-                                <configuration>
-                                    <artifactItems>
-                                        <artifactItem>
-                                            <groupId>postgresql</groupId>
-                                            <artifactId>postgresql</artifactId>
-                                            <version>${postgresql.version}</version>
-                                            <type>jar</type>
-                                            <classifier>sources</classifier>
-                                            <overWrite>true</overWrite>
-                                            <outputDirectory>${project.build.directory}/generated-sources/upstream</outputDirectory>
-                                        </artifactItem>
-                                    </artifactItems>
-                                    <overWriteReleases>true</overWriteReleases>
-                                    <overWriteSnapshots>true</overWriteSnapshots>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>add-source</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>${project.build.directory}/generated-sources/upstream</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
-
 </project>

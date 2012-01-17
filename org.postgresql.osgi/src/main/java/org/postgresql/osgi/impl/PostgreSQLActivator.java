@@ -15,11 +15,11 @@
  */
 package org.postgresql.osgi.impl;
 
-import java.util.Dictionary;
 import java.util.Properties;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.jdbc.DataSourceFactory;
+import org.postgresql.Driver;
 
 /**
  *
@@ -27,26 +27,24 @@ import org.osgi.service.jdbc.DataSourceFactory;
  */
 public class PostgreSQLActivator implements BundleActivator {
     
-    @Override
     public void start(BundleContext context) throws Exception {
         DataSourceFactory factory = new PostgreSQLDataSourceFactory(context);
 
         Properties serviceProperties = new Properties();
-        Dictionary header = context.getBundle().getHeaders();
+
         serviceProperties.put(DataSourceFactory.OSGI_JDBC_DRIVER_CLASS,
                 org.postgresql.Driver.class.getName());
 
         serviceProperties.put(DataSourceFactory.OSGI_JDBC_DRIVER_VERSION,
-                header.get("PostgreSQL-Driver"));
+                Driver.getVersion());
 
         serviceProperties.put(DataSourceFactory.OSGI_JDBC_DRIVER_NAME,
-                "PostgreSQL JDBC Driver");
+                "PostgreSQL");
 
         context.registerService(DataSourceFactory.class.getName(),
                 factory, serviceProperties);
     }
 
-    @Override
     public void stop(BundleContext context) throws Exception {
         // nothing to be done here...
     }

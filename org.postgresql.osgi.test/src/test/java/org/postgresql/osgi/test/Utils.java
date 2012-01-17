@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.ancoron.postgresql.jpa.test;
+package org.postgresql.osgi.test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -62,7 +62,7 @@ import org.postgresql.net.PGmacaddr;
  *
  * @author ancoron
  */
-public class TestUtil {
+public class Utils {
 
     protected static final String PG_DATABASE;
     protected static final String PG_HOSTNAME;

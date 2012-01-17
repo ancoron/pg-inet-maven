@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>org.ancoron.postgresql</groupId>
-            <artifactId>org.postgresql.osgi</artifactId>
+            <artifactId>org.postgresql</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
