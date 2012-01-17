@@ -298,7 +298,6 @@ public class JPAIntegrationTest {
             log.log(Level.INFO, "Loaded {0} matching entities in {1} milliseconds",
                     new Object[] {res2.size(), end - start});
             for(Object[] o : res2) {
-                log.warning("Using workaround for EclipseLink bug #321649");
                 // net = (AdvancedNetworkEntity) networks.get(0);
                 // Assert.assertTrue(em.contains(net));
                 AdvancedNetworkEntity entity = new AdvancedNetworkEntity();
