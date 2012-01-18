@@ -207,7 +207,7 @@
                                 <id>bugfixing</id>
                                 <configuration>
                                     <patchDirectory>src/main/patches</patchDirectory>
-                                    <patchTrackingFile>${project.build.directory}/patches-applied.txt</patchTrackingFile>
+                                    <optimizations>false</optimizations>
                                     <naturalOrderProcessing>true</naturalOrderProcessing>
                                 </configuration>
                                 <phase>process-sources</phase>
