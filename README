@@ -13,3 +13,118 @@ The official documentation for this is here:
 In advance, this repository provides some extended means like integration into
 OSGi runtime environments as well as other code extensions to the original.
 
+
+So, let's get started with using PostgreSQL network types within JPA:
+
+
+1.) Configure this repository (if not already available):
+
+ <repository>
+     <id>sonatype-nexus-releases</id>
+     <name>Release artifacts</name>
+     <url>https://oss.sonatype.org/content/repositories/releases</url>
+     <snapshots>
+         <enabled>false</enabled>
+     </snapshots>
+ </repository>
+
+
+2.) Add a new dependency to your JPA project:
+
+ <dependency>
+     <groupId>org.ancoron.postgresql</groupId>
+     <artifactId>org.ancoron.postgresql.jpa</artifactId>
+     <version>9.1.901.jdbc4.1</version>
+ </dependency>
+
+
+3.) In your JPA entity class you can now use the new types like this (for
+EclipseLink):
+
+ import org.ancoron.postgresql.jpa.IPNetwork;
+ import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
+ import org.eclipse.persistence.annotations.Convert;
+ import org.eclipse.persistence.annotations.Converter;
+
+ // ...
+
+ @Entity
+ @Table(name="test_entity_network")
+ @Converter(name="netConverter", converterClass=NetworkConverter.class)
+ public class NetworkTestEntity implements Serializable {
+
+     @Column(name="c_network", nullable=false)
+     @Convert("netConverter")
+     private IPNetwork network;
+
+     // ...
+ }
+
+
+4.) Before running the project you should make sure that you use the extended
+DatabasePlatform provided by the same dependency. Do so by editing the
+persistence.xml file of your project:
+
+ <?xml version="1.0" encoding="UTF-8"?>
+ <persistence version="2.0"
+              xmlns="http://java.sun.com/xml/ns/persistence"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+                  http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+     <persistence-unit name="PGNetworkUnit" transaction-type="RESOURCE_LOCAL">
+         <!--
+             ...JDBC access declarations...
+
+             ...classes...
+         -->
+         <properties>
+             <!-- the standard platform doesn't know anything about the custom types
+             <property name="eclipselink.target-database"
+                       value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
+             -->
+
+             <!-- this is the real one -->
+             <property name="eclipselink.target-database"
+                       value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
+
+             <!--
+                 ...other properties...
+             -->
+         </properties>
+     </persistence-unit>
+ </persistence>
+
+
+5.) If you are running your application inside an application server please
+make sure that you use the appropriate ServerPlaftorm with Eclipselink,
+because we have to unwrap the wrapper-connections established by the app server,
+e.g. for GlassFish:
+
+ <?xml version="1.0" encoding="UTF-8"?>
+ <persistence version="2.0"
+              xmlns="http://java.sun.com/xml/ns/persistence"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+                  http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+     <persistence-unit name="PGNetworkUnit" transaction-type="JTA">
+         <jta-data-source>java:app/jdbc/NetworkTestDS</jta-data-source>
+         <!--
+             ...classes...
+         -->
+         <properties>
+             <property name="eclipselink.target-database"
+                       value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
+
+             <property name="eclipselink.target-server" value="SunAS9"/>
+
+             <!--
+                 ...other properties...
+             -->
+         </properties>
+     </persistence-unit>
+ </persistence>
+
+
+Now you're all set.
+
+ Have fun!
