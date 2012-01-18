@@ -24,6 +24,9 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.jdbc.DataSourceFactory;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.ServiceTracker;
+import org.postgresql.net.PGcidr;
+import org.postgresql.net.PGinet;
+import org.postgresql.net.PGmacaddr;
 import static org.ops4j.pax.exam.CoreOptions.*;
 
 /*
@@ -126,24 +129,8 @@ public class RFC122Test {
             assert(ds != null);
 
             Connection conn = ds.getConnection();
-            log.log(LogService.LOG_INFO, "Got JDBC connection: " + conn);
 
-            assert(conn != null);
-
-            String table = "tmp_tbl_" + UUID.randomUUID().toString().replaceAll("\\-", "");
-
-            String tableDef = "(";
-            tableDef += "c_id BIGINT PRIMARY KEY,";
-            tableDef += "c_name CHARACTER VARYING";
-            tableDef += ")";
-
-            execute(conn, "CREATE TABLE " + table + " " + tableDef);
-
-            execute(conn, "SELECT * FROM " + table);
-
-            execute(conn, "DROP TABLE " + table);
-
-            conn.close();
+            testConnection(conn);
 
             // now test negative...
             try {
@@ -159,6 +146,70 @@ public class RFC122Test {
             log.log(LogService.LOG_ERROR, x.getMessage(), x);
             throw new RuntimeException(x);
         }
+    }
+
+    private void testConnection(Connection conn) throws SQLException {
+        log.log(LogService.LOG_INFO, "Got JDBC connection: " + conn);
+
+        assert(conn != null);
+
+        String table = "tmp_tbl_" + UUID.randomUUID().toString().replaceAll("\\-", "");
+
+        String tableDef = "(";
+        tableDef += "c_id BIGINT PRIMARY KEY,";
+        tableDef += "c_name CHARACTER VARYING,";
+        tableDef += "c_net inet,";
+        tableDef += "c_cidr cidr,";
+        tableDef += "c_mac macaddr";
+        tableDef += ")";
+
+        execute(conn, "CREATE TABLE " + table + " " + tableDef);
+
+        execute(conn, "SELECT * FROM " + table);
+        
+        PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + table
+                + " (c_id, c_name, c_net, c_cidr, c_mac) VALUES (?, ?, ?, ?, ?)");
+
+        stmt.setInt(1, 1);
+        stmt.setString(2, "private LAN");
+        stmt.setObject(3, new PGinet("1fe80::20e:cff:fe33:d204/64"));
+        stmt.setObject(4, new PGcidr("192.168.167.0/24"));
+        stmt.setObject(5, new PGmacaddr("00:0e:0c:33:d2:04"));
+        assert(stmt.executeUpdate() == 1);
+        stmt.close();
+        
+        stmt = conn.prepareStatement(" SELECT c_id, c_name, c_net, c_cidr, c_mac"
+                + " FROM " + table);
+        ResultSet rs = stmt.executeQuery();
+        
+        assert(rs.isBeforeFirst());
+        
+        while(rs.next()) {
+            Object o = rs.getObject("c_net");
+            assert (o != null);
+            assert (o instanceof PGinet);
+            PGinet inet = (PGinet) o;
+            assert ("1fe80::20e:cff:fe33:d204/64".equals(inet.getValue()));
+
+            o = rs.getObject("c_cidr");
+            assert (o != null);
+            assert (o instanceof PGcidr);
+            PGcidr cidr = (PGcidr) o;
+            assert ("192.168.167.0/24".equals(cidr.getValue()));
+
+            o = rs.getObject("c_mac");
+            assert (o != null);
+            assert (o instanceof PGmacaddr);
+            PGmacaddr mac = (PGmacaddr) o;
+            assert ("00:0e:0c:33:d2:04".equals(mac.getValue()));
+        }
+        rs.close();
+        stmt.close();
+        
+
+        execute(conn, "DROP TABLE " + table);
+
+        conn.close();
     }
     
     @Test
@@ -183,23 +234,8 @@ public class RFC122Test {
         assert(pc != null);
         
         Connection conn = pc.getConnection();
-        
-        assert(conn != null);
-        
-        String table = "tmp_tbl_" + UUID.randomUUID().toString().replaceAll("\\-", "");
-        
-        String tableDef = "(";
-        tableDef += "c_id BIGINT PRIMARY KEY,";
-        tableDef += "c_name CHARACTER VARYING";
-        tableDef += ")";
 
-        execute(conn, "CREATE TABLE " + table + " " + tableDef);
-
-        execute(conn, "SELECT * FROM " + table);
-        
-        execute(conn, "DROP TABLE " + table);
-        
-        conn.close();
+        testConnection(conn);
         
         pc.close();
     }
