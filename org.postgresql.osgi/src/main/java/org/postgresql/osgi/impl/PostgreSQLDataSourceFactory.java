@@ -129,7 +129,7 @@ public class PostgreSQLDataSourceFactory implements PGDataSourceFactory {
 
         setBaseDSProperties(ds, prprts);
         
-        return ds;
+        return new DelegatingDataSource(ds, context);
     }
 
     public ConnectionPoolDataSource createConnectionPoolDataSource(Properties prprts) throws SQLException {
@@ -138,7 +138,7 @@ public class PostgreSQLDataSourceFactory implements PGDataSourceFactory {
         setBaseDSProperties(ds, prprts);
         setPooledDSProperties(ds, prprts);
         
-        return ds;
+        return new DelegatingConnectionPoolDataSource(ds, context);
     }
 
     public XADataSource createXADataSource(Properties prprts) throws SQLException {
@@ -146,7 +146,7 @@ public class PostgreSQLDataSourceFactory implements PGDataSourceFactory {
         
         setBaseDSProperties(ds, prprts);
         
-        return ds;
+        return new DelegatingXADataSource(ds, context);
     }
 
     public Driver createDriver(Properties prprts) throws SQLException {
