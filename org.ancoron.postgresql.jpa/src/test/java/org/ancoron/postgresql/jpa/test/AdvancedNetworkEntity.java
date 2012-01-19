@@ -23,7 +23,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.ancoron.postgresql.jpa.IPNetwork;
-import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
+import org.ancoron.postgresql.jpa.eclipselink.IPNetworkConverter;
 import org.eclipse.persistence.annotations.Convert;
 import org.eclipse.persistence.annotations.Converter;
 
@@ -33,7 +33,7 @@ import org.eclipse.persistence.annotations.Converter;
  */
 @Entity
 @Table(name="test_network_advanced")
-@Converter(name="netConverter", converterClass=NetworkConverter.class)
+@Converter(name="netConverter", converterClass=IPNetworkConverter.class)
 public class AdvancedNetworkEntity implements Serializable {
     
     @Id

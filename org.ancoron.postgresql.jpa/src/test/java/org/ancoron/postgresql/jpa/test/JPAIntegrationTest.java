@@ -29,6 +29,7 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import org.ancoron.postgresql.jpa.IPNetwork;
+import org.ancoron.postgresql.jpa.IPTarget;
 import org.junit.Test;
 import org.postgresql.util.PGobject;
 import org.junit.AfterClass;
@@ -193,7 +194,7 @@ public class JPAIntegrationTest {
             String table = AdvancedNetworkEntity.class.getAnnotation(Table.class).name();
             String column = AdvancedNetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
             Query q = em.createNativeQuery("SELECT b.c_id, b.c_network FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
-            q.setParameter("IPADDR", new IPNetwork("10.10.1.6"));
+            q.setParameter("IPADDR", new IPTarget("10.10.1.6"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
