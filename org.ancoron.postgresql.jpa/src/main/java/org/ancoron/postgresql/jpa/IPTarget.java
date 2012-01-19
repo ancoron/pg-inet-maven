@@ -87,9 +87,8 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
     }
     
     public final void init() {
-        v6 = addr != null && addr.length == 16;
-        
-        if(host == null) {
+        if(addr != null) {
+            v6 = addr.length == 16;
             try {
                 host = InetAddress.getByAddress(addr);
             } catch (UnknownHostException ex) {
@@ -97,6 +96,9 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
                         "Unable to initialize IPTarget instance from given byte array",
                         ex);
             }
+        } else {
+            // reset everything...
+            host = null;
         }
     }
 
