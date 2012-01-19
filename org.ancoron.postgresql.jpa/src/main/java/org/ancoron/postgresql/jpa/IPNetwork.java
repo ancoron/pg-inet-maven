@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.BitSet;
 import org.postgresql.net.PGcidr;
 
 /**
@@ -29,7 +30,6 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
 
     private byte[] broadcastAddress;
     private byte[] hostmaskAddress;
-    private short maskLength;
     private byte[] netmaskAddress;
     
     private boolean v6 = false;
@@ -74,15 +74,81 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     }
     
     public final void init() {
-        v6 = addr != null && addr.length == 16;
+        if(addr != null) {
+            v6 = addr.length == 16;
+            
+            if(!v6) {
+                broadcastAddress = high();
+            } else {
+                broadcastAddress = null;
+            }
+            
+            netmaskAddress = netmask();
+            hostmaskAddress = hostmask();
+        } else {
+            // reset everything...
+            broadcastAddress = null;
+            hostmaskAddress = null;
+            netmaskAddress = null;
+        }
     }
 
+    /**
+     * The broadcast address for an IPv4 subnet.
+     * 
+     * <p>
+     * This returns <code>null</code> in case of an IPv6 address as there are
+     * no broadcast addresses anymore by definition.
+     * </p>
+     * 
+     * @return The broadcast address or <code>null</code>
+     */
     public byte[] getBroadcastAddress() {
         return broadcastAddress;
     }
 
     public void setBroadcastAddress(byte[] broadcastAddress) {
         this.broadcastAddress = broadcastAddress;
+    }
+    
+    private byte[] netmask() {
+        byte[] mask = new byte[addr.length];
+        int i = netmask / 8;
+        int s = 8 - (netmask % 8);
+
+        for(int j=0; j<i; j++) {
+            mask[j] = (byte) 255;
+        }
+
+        if(s > 0 && s < 8) {
+            byte b = (byte) 255;
+            for(int j=0; j<s; j++) {
+                b = (byte) (b & ~(1 << j));
+            }
+            mask[i] = b;
+        }
+        
+        return mask;
+    }
+
+    private byte[] hostmask() {
+        byte[] mask = new byte[addr.length];
+        int i = netmask / 8;
+        int s = 8 - (netmask % 8);
+
+        for(int j=i; j<mask.length; j++) {
+            mask[j] = (byte) 255;
+        }
+
+        if(s > 0 && s < 8) {
+            byte b = (byte) 0;
+            for(int j=0; j<s; j++) {
+                b = (byte) (b | (1 << j));
+            }
+            mask[i] = b;
+        }
+        
+        return mask;
     }
 
     public byte[] getHostmaskAddress() {
@@ -91,14 +157,6 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
 
     public void setHostmaskAddress(byte[] hostmaskAddress) {
         this.hostmaskAddress = hostmaskAddress;
-    }
-
-    public short getMaskLength() {
-        return maskLength;
-    }
-
-    public void setMaskLength(short maskLength) {
-        this.maskLength = maskLength;
     }
 
     public byte[] getNetmaskAddress() {
@@ -116,7 +174,7 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     public void setV6(boolean v6) {
         this.v6 = v6;
     }
-
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
