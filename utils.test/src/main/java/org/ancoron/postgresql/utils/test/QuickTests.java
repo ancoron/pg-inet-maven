@@ -93,6 +93,50 @@ public class QuickTests {
         }
 
         System.out.println("HIGH(s=" + s + "): " + toString(hi) + " (" + InetAddress.getByAddress(hi).toString() + ")");
+        
+        netmask = 65;
+        System.out.println("Netmask: " + toString(netmask(addr, netmask)));
+        System.out.println("Hostmask: " + toString(hostmask(addr, netmask)));
+    }
+    
+    private static byte[] netmask(byte[] addr, int netmask) {
+        byte[] mask = new byte[addr.length];
+        int i = netmask / 8;
+        int s = 8 - (netmask % 8);
+
+        for(int j=0; j<i; j++) {
+            mask[j] = (byte) 255;
+        }
+
+        if(s > 0 && s < 8) {
+            byte b = (byte) 255;
+            for(int j=0; j<s; j++) {
+                b = (byte) (b & ~(1 << j));
+            }
+            mask[i] = b;
+        }
+        
+        return mask;
+    }
+    
+    private static byte[] hostmask(byte[] addr, int netmask) {
+        byte[] mask = new byte[addr.length];
+        int i = netmask / 8;
+        int s = 8 - (netmask % 8);
+
+        for(int j=i; j<mask.length; j++) {
+            mask[j] = (byte) 255;
+        }
+
+        if(s > 0 && s < 8) {
+            byte b = (byte) 0;
+            for(int j=0; j<s; j++) {
+                b = (byte) (b | (1 << j));
+            }
+            mask[i] = b;
+        }
+        
+        return mask;
     }
     
     private static byte[] getMac(byte[] fullIpv6) {
