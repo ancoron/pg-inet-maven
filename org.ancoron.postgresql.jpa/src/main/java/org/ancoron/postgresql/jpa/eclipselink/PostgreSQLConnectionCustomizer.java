@@ -22,7 +22,7 @@ import java.util.logging.Logger;
 import org.eclipse.persistence.internal.databaseaccess.Accessor;
 import org.eclipse.persistence.internal.databaseaccess.ConnectionCustomizer;
 import org.eclipse.persistence.sessions.Session;
-import org.postgresql.jdbc2.AbstractJdbc2Connection;
+import org.postgresql.PGConnection;
 
 import static org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform.*;
 
@@ -35,7 +35,7 @@ public class PostgreSQLConnectionCustomizer extends ConnectionCustomizer {
     private static final String CLASSNAME = "PostgreSQLConnectionCustomizer";
     private static final Logger log = Logger.getLogger(PostgreSQLConnectionCustomizer.class.getName());
     
-    private AbstractJdbc2Connection pconn = null;
+    private boolean active = false;
     
     public PostgreSQLConnectionCustomizer(Accessor accessor, Session session) {
         super(accessor, session);
@@ -44,25 +44,30 @@ public class PostgreSQLConnectionCustomizer extends ConnectionCustomizer {
     @Override
     public void customize() {
         Connection conn = accessor.getConnection();
+        final PGConnection pconn;
         
         if(conn != null) {
-            if(conn instanceof AbstractJdbc2Connection) {
+            if(conn instanceof PGConnection) {
                 // non-server mode...
-                pconn = (AbstractJdbc2Connection) conn;
+                pconn = (PGConnection) conn;
             } else {
                 // try to unwrap...
                 conn = session.getServerPlatform().unwrapConnection(conn);
-                if(conn instanceof AbstractJdbc2Connection) {
-                    pconn = (AbstractJdbc2Connection) conn;
+                if(conn instanceof PGConnection) {
+                    pconn = (PGConnection) conn;
                 } else if(conn != null) {
                     log.logp(Level.WARNING, CLASSNAME, "customize",
                             "Unwrapped JDBC Connection is not an expected one: {0}",
                             conn.getClass().getName());
+                    pconn = null;
                 } else {
                     log.logp(Level.WARNING, CLASSNAME, "customize",
                             "Unable to unwrap JDBC Connection");
+                    pconn = null;
                 }
             }
+        } else {
+            pconn = null;
         }
         
         if(pconn != null) {
@@ -78,16 +83,18 @@ public class PostgreSQLConnectionCustomizer extends ConnectionCustomizer {
                         "Unable to add networking extensions", ex);
             }
         }
+        
+        active = true;
     }
 
     @Override
     public boolean isActive() {
-        return pconn != null;
+        return active;
     }
 
     @Override
     public void clear() {
         // nothing special to do here...
-        pconn = null;
+        active = false;
     }
 }
