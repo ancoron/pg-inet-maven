@@ -19,7 +19,6 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.BitSet;
 import org.postgresql.net.PGcidr;
 
 /**
