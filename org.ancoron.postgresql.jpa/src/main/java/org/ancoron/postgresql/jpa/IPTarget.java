@@ -102,6 +102,13 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         }
     }
 
+    @Override
+    public void setValue(String v) throws SQLException {
+        super.setValue(v);
+        
+        init();
+    }
+
     public InetAddress getHost() {
         return host;
     }
@@ -273,5 +280,75 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         snmc[15] = addr[15];
         
         return InetAddress.getByAddress(snmc);
+    }
+
+    /**
+     * Get the IPTarget with the IP address decreased by one.
+     * 
+     * <p>
+     * This method returns <code>null</code> in case the current IP address is
+     * completely zero (e.g. <code>0.0.0.0</code> or <code>::</code>).
+     * </p>
+     * 
+     * @return The next lower IPTarget or <code>null</code>
+     */
+    public IPTarget getPrevious() {
+        byte[] prev = previous();
+        
+        return prev != null ? new IPTarget(prev) : null;
+    }
+
+    /**
+     * Get the IPTarget with the IP address increased by one.
+     * 
+     * <p>
+     * This method returns <code>null</code> in case the current IP address is
+     * completely full (e.g. <code>255.255.255.255</code> or
+     * <code>ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff</code>).
+     * </p>
+     * 
+     * @return The next higher IPTarget or <code>null</code>
+     */
+    public IPTarget getNext() {
+        byte[] next = next();
+        
+        return next != null ? new IPTarget(next) : null;
+    }
+
+    private byte[] previous() {
+        byte[] previous = new byte[addr.length];
+        System.arraycopy(addr, 0, previous, 0, previous.length);
+        int i = previous.length - 1;
+
+        while(previous[i] == (byte) 0) {
+            previous[i] = (byte) 0xFF;
+            i = i - 1;
+            if(i == 0) {
+                // all bytes 0x00...
+                return null;
+            }
+        }
+        
+        previous[i] = (byte) (previous[i] - (byte) 1);
+        
+        return previous;
+    }
+    
+    private byte[] next() {
+        byte[] next = new byte[addr.length];
+        System.arraycopy(addr, 0, next, 0, next.length);
+        int i = next.length - 1;
+
+        while(next[i] == (byte) 0xFF) {
+            i = i - 1;
+            if(i == 0) {
+                // all bytes 0xFF...
+                return null;
+            }
+        }
+
+        next[i] = (byte) (next[i] + (byte) 1);
+        
+        return next;
     }
 }
