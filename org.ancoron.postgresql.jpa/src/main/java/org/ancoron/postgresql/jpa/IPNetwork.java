@@ -262,7 +262,7 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     public IPTarget getHighestTarget() {
         byte[] hi = high();
         
-        if(!v6) {
+        if(!v6 && netmask < (addr.length * 8)) {
             // decrease by one for IPv4...
             int i = hi.length - 1;
             hi[i] = (byte) (hi[i] - (byte) 1);
@@ -274,7 +274,7 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     public IPTarget getLowestTarget() {
         byte[] low = low();
         
-        if(!v6) {
+        if(!v6 && netmask < (addr.length * 8)) {
             // increase by one for IPv4...
             int i = low.length - 1;
             low[i] = (byte) (low[i] + (byte) 1);
