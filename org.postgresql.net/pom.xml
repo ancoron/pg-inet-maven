@@ -103,12 +103,38 @@
         <profile>
             <id>initialize</id>
             <activation>
+                <activeByDefault>true</activeByDefault>
+                <!--
                 <file>
                     <missing>src/main/java/org/postgresql/net/PGNetworkBase.java</missing>
                 </file>
+                -->
             </activation>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.build.sourceDirectory}</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>${project.build.testSourceDirectory}</directory>
+                                    <includes>
+                                        <include>**/PGcidrTest.java</include>
+                                        <include>**/PGinetTest.java</include>
+                                        <include>**/PGmacaddrTest.java</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>**/TestUtil.java</exclude>
+                                    </excludes>
+                                    <followSymlinks>false</followSymlinks>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-scm-plugin</artifactId>
@@ -216,35 +242,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        
-        <profile>
-            <id>source-clean</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-clean-plugin</artifactId>
-                        <configuration>
-                            <filesets>
-                                <fileset>
-                                    <directory>${project.build.sourceDirectory}</directory>
-                                </fileset>
-                                <fileset>
-                                    <directory>${project.build.testSourceDirectory}</directory>
-                                    <includes>
-                                        <include>**/*Test.java</include>
-                                    </includes>
-                                    <excludes>
-                                        <exclude>**/TestUtil.java</exclude>
-                                    </excludes>
-                                    <followSymlinks>false</followSymlinks>
-                                </fileset>
-                            </filesets>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
