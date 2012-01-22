@@ -40,19 +40,16 @@ public class QuickTests {
         arrays.add(InetAddress.getByName("fe80::10e:cff:fe33:d204").getAddress());
         arrays.add(InetAddress.getByName("fe80::e:cff:fe33:d204").getAddress());
         arrays.add(InetAddress.getByName("fe80::40e:cff:fe33:d204").getAddress());
+        arrays.add(InetAddress.getByName("fe80::40e:cff:feff:ffff").getAddress());
+        arrays.add(InetAddress.getByName("255.255.255.255").getAddress());
+        arrays.add(InetAddress.getByName("0.0.0.0").getAddress());
         
 
         for(byte[] mask : arrays) {
             BigInteger bi = new BigInteger(1, mask);
-
-            /*
-            for(int i = 0; i < mask.length; i++) {
-                bi = bi.shiftLeft(8).add(BigInteger.valueOf(Byte.valueOf(mask[i]).longValue()));
-            }
-             * 
-             */
-
             System.out.println("IP (" + toString(mask) + ") = " + bi.toString(10) + " (MAC = " + toString(getMac(mask)) + ")");
+            
+            System.out.println("this = " + toString(mask) + ", previous = " + toString(previous(mask)) + ", next = " + toString(next(mask)));
         }
 
         int netmask = 64;
@@ -97,6 +94,43 @@ public class QuickTests {
         netmask = 65;
         System.out.println("Netmask: " + toString(netmask(addr, netmask)));
         System.out.println("Hostmask: " + toString(hostmask(addr, netmask)));
+    }
+
+    private static byte[] previous(byte[] addr) {
+        byte[] previous = new byte[addr.length];
+        System.arraycopy(addr, 0, previous, 0, previous.length);
+        int i = previous.length - 1;
+
+        while(previous[i] == (byte) 0) {
+            previous[i] = (byte) 0xFF;
+            i = i - 1;
+            if(i == 0) {
+                // all bytes 0x00...
+                return null;
+            }
+        }
+        
+        previous[i] = (byte) (previous[i] - 0x01 & 0xFF);
+        
+        return previous;
+    }
+    
+    private static byte[] next(byte[] addr) {
+        byte[] next = new byte[addr.length];
+        System.arraycopy(addr, 0, next, 0, next.length);
+        int i = next.length - 1;
+
+        while(next[i] == (byte) 0xFF) {
+            i = i - 1;
+            if(i == 0) {
+                // all bytes 0xFF...
+                return null;
+            }
+        }
+
+        next[i] = (byte) (next[i] + 0x01 & 0xFF);
+        
+        return next;
     }
     
     private static byte[] netmask(byte[] addr, int netmask) {
