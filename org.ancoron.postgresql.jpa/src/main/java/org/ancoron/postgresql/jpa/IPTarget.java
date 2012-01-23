@@ -351,4 +351,41 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         
         return next;
     }
+    
+    /**
+     * Get the embedded IPv4 address of an IPv6 address.
+     * 
+     * @return the IPv4 address or <tt>null</tt>
+     */
+    public IPTarget getEmbeddedIPv4() {
+        if(v6) {
+            boolean emb = true;
+            if(!embedded_ipv4) {
+                // check IPv4-compatible...
+                for(int i=0; i<10; i++) {
+                    emb &= (addr[i] == (byte) 0x00);
+                }
+
+                if(addr[10] == (byte) 0xFF && addr[11] == (byte) 0xFF) {
+                    // old format...
+                    emb &= true;
+                } else if(addr[10] == (byte) 0x00 && addr[11] == (byte) 0x00) {
+                    emb &= true;
+                } else {
+                    emb = false;
+                }
+
+                // avoid '::1' ...
+                emb &= addr[12] != (byte) 0x00;
+            }
+            
+            if(emb) {
+                byte[] a = new byte[4];
+                System.arraycopy(addr, 12, a, 0, 4);
+                return new IPTarget(a);
+            }
+        }
+        
+        return null;
+    }
 }
