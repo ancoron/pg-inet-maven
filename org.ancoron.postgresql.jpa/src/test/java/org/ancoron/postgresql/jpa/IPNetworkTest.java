@@ -113,8 +113,8 @@ public class IPNetworkTest {
                 null,
                 "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffc0",
                 "::3f",
-                "2002::7b2d:4340",
-                "2002::7b2d:437f");
+                "2002::7b2d:4341",
+                "2002::7b2d:437e");
     }
 
     protected byte[] bytes(String spec) {

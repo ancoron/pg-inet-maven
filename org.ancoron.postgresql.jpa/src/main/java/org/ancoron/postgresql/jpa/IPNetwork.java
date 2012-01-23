@@ -258,11 +258,49 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
         }
         return low;
     }
+
+    /**
+     * Check if the network is made IPv4 compatible.
+     * 
+     * @return <tt>true</tt> if this network is IPv4 compatible, <tt>false</tt>
+     * otherwise
+     */
+    public boolean hasEmbeddedIPv4() {
+        if(v6) {
+            if(embedded_ipv4) {
+                return true;
+            }
+            
+            boolean emb = true;
+            // check IPv4-compatible...
+            for(int i=0; i<10; i++) {
+                emb &= (addr[i] == (byte) 0x00);
+            }
+            
+            if(addr[10] == (byte) 0xFF && addr[11] == (byte) 0xFF) {
+                // old format...
+                emb &= true;
+            } else if(addr[10] == (byte) 0x00 && addr[11] == (byte) 0x00) {
+                emb &= true;
+            } else {
+                emb = false;
+            }
+
+            emb &= netmask > 96;
+            
+            // avoid '::1' ...
+            emb &= addr[12] != (byte) 0x00;
+            
+            return emb;
+        }
+        
+        return false;
+    }
     
     public IPTarget getHighestTarget() {
         byte[] hi = high();
         
-        if(!v6 && netmask < (addr.length * 8)) {
+        if((!v6 || hasEmbeddedIPv4()) && netmask < (addr.length * 8)) {
             // decrease by one for IPv4...
             int i = hi.length - 1;
             hi[i] = (byte) (hi[i] - (byte) 1);
@@ -274,7 +312,7 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     public IPTarget getLowestTarget() {
         byte[] low = low();
         
-        if(!v6 && netmask < (addr.length * 8)) {
+        if((!v6 || hasEmbeddedIPv4()) && netmask < (addr.length * 8)) {
             // increase by one for IPv4...
             int i = low.length - 1;
             low[i] = (byte) (low[i] + (byte) 1);
