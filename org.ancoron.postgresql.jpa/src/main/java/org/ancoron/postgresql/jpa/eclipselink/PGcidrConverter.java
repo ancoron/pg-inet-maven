@@ -20,24 +20,31 @@ import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.sessions.Session;
-import org.postgresql.net.PGinet;
+import org.postgresql.net.PGcidr;
 import org.postgresql.util.PGobject;
 
 /**
- * Supports mapping of <tt>org.postgresql.net.PGinet</tt> inside JPA entities.
+ * Supports mapping of {@link PGcidr} inside JPA entities.
  * 
  * <p>
- * Example usage:
+ * <strong>Example usage:</strong>
  * 
  * <pre>
- * @Entity
- * @Converter(name="pginetConverter", converterClass=PGinetConverter.class)
- * public class PGinetEntity implements Serializable {
- *     
+ * // ...
+ * import org.postgresql.net.PGcidr;
+ * import org.ancoron.postgresql.jpa.eclipselink.PGcidrConverter;
  * 
- *     @Convert("pginetConverter")
- *     @Column(name="c_net")
- *     private PGinet net;
+ * // ...
+ * 
+ * &#064;Entity
+ * &#064;Converter(name="cidrConverter", converterClass=PGcidrConverter.class)
+ * public class CIDREntity implements Serializable {
+ *     
+ *     // ...
+ * 
+ *     &#064;Convert("cidrConverter")
+ *     &#064;Column(name="c_cidr")
+ *     private PGcidr cidr;
  * 
  *     // ...
  * }
@@ -46,19 +53,19 @@ import org.postgresql.util.PGobject;
  *
  * @author ancoron
  * 
- * @see PGinet
+ * @see PGcidr
  */
-public class PGinetConverter implements Converter {
+public class PGcidrConverter implements Converter {
 
     @Override
-    public PGinet convertObjectValueToDataValue(Object objectValue, Session session) {
+    public PGcidr convertObjectValueToDataValue(Object objectValue, Session session) {
         if (objectValue == null) {
             return null;
-        } else if (objectValue instanceof PGinet) {
-            return (PGinet) objectValue;
+        } else if (objectValue instanceof PGcidr) {
+            return (PGcidr) objectValue;
         } else if (objectValue instanceof String) {
             try {
-                return new PGinet((String) objectValue);
+                return new PGcidr((String) objectValue);
             } catch (SQLException ex) {
                 throw new IllegalArgumentException("Unable to convert an object value", ex);
             }
@@ -66,26 +73,33 @@ public class PGinetConverter implements Converter {
 
         throw new IllegalArgumentException("Unable to convert object value of type "
                 + objectValue.getClass().getName() + " into a "
-                + PGinet.class.getName());
+                + PGcidr.class.getName());
     }
 
     @Override
-    public PGinet convertDataValueToObjectValue(Object dataValue, Session session) {
+    public PGcidr convertDataValueToObjectValue(Object dataValue, Session session) {
+        PGcidr net = null;
         if (dataValue == null) {
-            return null;
-        } else if (dataValue instanceof PGinet) {
-            return (PGinet) dataValue;
+            return net;
+        } else if (dataValue instanceof PGcidr) {
+            net = (PGcidr) dataValue;
         } else if (dataValue instanceof PGobject) {
             try {
-                return new PGinet(((PGobject) dataValue).getValue());
+                // this is a fallback in case special JDBC types are not available...
+                net = new PGcidr(((PGobject) dataValue).getValue());
             } catch (SQLException ex) {
-                throw new IllegalArgumentException("Unable to convert an object value", ex);
+                throw new IllegalArgumentException("Unable to convert data value '"
+                        + dataValue + "' into a " + PGcidr.class.getName(), ex);
             }
         }
 
-        throw new IllegalArgumentException("Unable to convert data value of type "
-                + dataValue.getClass().getName() + " into a "
-                + PGinet.class.getName());
+        if (net == null) {
+            throw new IllegalArgumentException("Unable to convert data value of type "
+                    + dataValue.getClass().getName() + " into a "
+                    + PGcidr.class.getName());
+        }
+
+        return net;
     }
 
     @Override
@@ -97,7 +111,7 @@ public class PGinetConverter implements Converter {
     public void initialize(DatabaseMapping mapping, Session session) {
         final DatabaseField field = mapping.getField();
         field.setSqlType(java.sql.Types.OTHER);
-        field.setTypeName("inet");
-        field.setColumnDefinition("INET");
+        field.setTypeName("cidr");
+        field.setColumnDefinition("CIDR");
     }
 }

@@ -15,15 +15,10 @@
  */
 package org.ancoron.postgresql.jpa.eclipselink;
 
-import java.sql.SQLException;
-import java.util.logging.Logger;
 import org.ancoron.postgresql.jpa.IPNetwork;
-import org.eclipse.persistence.internal.helper.DatabaseField;
-import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.sessions.Session;
 import org.postgresql.net.PGcidr;
-import org.postgresql.util.PGobject;
 
 /**
  * Supports mapping of {@link IPNetwork} inside JPA entities
@@ -58,29 +53,17 @@ import org.postgresql.util.PGobject;
  * 
  * @see IPNetwork
  */
-public class IPNetworkConverter implements Converter {
-
-    private static final Logger log = Logger.getLogger(IPNetworkConverter.class.getName());
+public class IPNetworkConverter extends PGcidrConverter implements Converter {
 
     @Override
     public PGcidr convertObjectValueToDataValue(Object objectValue, Session session) {
-        if (objectValue == null) {
+        if(objectValue == null) {
             return null;
-        } else if (objectValue instanceof IPNetwork) {
+        } else if(objectValue instanceof IPNetwork) {
             return (IPNetwork) objectValue;
-        } else if (objectValue instanceof PGcidr) {
-            return (PGcidr) objectValue;
-        } else if (objectValue instanceof String) {
-            try {
-                return new PGcidr((String) objectValue);
-            } catch (SQLException ex) {
-                throw new IllegalArgumentException("Unable to convert an object value", ex);
-            }
         }
 
-        throw new IllegalArgumentException("Unable to convert object value of type "
-                + objectValue.getClass().getName() + " into a "
-                + PGcidr.class.getName());
+        return super.convertObjectValueToDataValue(objectValue, session);
     }
 
     @Override
@@ -88,11 +71,11 @@ public class IPNetworkConverter implements Converter {
         IPNetwork net = null;
         if (dataValue == null) {
             return net;
-        } else if (dataValue instanceof PGcidr) {
-            net = new IPNetwork((PGcidr) dataValue);
-        } else if (dataValue instanceof PGobject) {
-            // this is a fallback in case special JDBC types are not available...
-            net = new IPNetwork(((PGobject) dataValue).getValue());
+        } else {
+            PGcidr cidr = super.convertDataValueToObjectValue(dataValue, session);
+            if(cidr != null) {
+                net = new IPNetwork(cidr);
+            }
         }
 
         if (net == null) {
@@ -102,18 +85,5 @@ public class IPNetworkConverter implements Converter {
         }
 
         return net;
-    }
-
-    @Override
-    public boolean isMutable() {
-        return false;
-    }
-
-    @Override
-    public void initialize(DatabaseMapping mapping, Session session) {
-        final DatabaseField field = mapping.getField();
-        field.setSqlType(java.sql.Types.OTHER);
-        field.setTypeName("cidr");
-        field.setColumnDefinition("CIDR");
     }
 }

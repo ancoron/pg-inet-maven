@@ -15,15 +15,10 @@
  */
 package org.ancoron.postgresql.jpa.eclipselink;
 
-import java.sql.SQLException;
-import java.util.logging.Logger;
 import org.ancoron.postgresql.jpa.IPTarget;
-import org.eclipse.persistence.internal.helper.DatabaseField;
-import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.sessions.Session;
 import org.postgresql.net.PGinet;
-import org.postgresql.util.PGobject;
 
 /**
  * Supports mapping of {@link IPTarget} inside JPA entities
@@ -58,62 +53,37 @@ import org.postgresql.util.PGobject;
  * 
  * @see IPTarget
  */
-public class IPTargetConverter implements Converter {
-
-    private static final Logger log = Logger.getLogger(IPTargetConverter.class.getName());
+public class IPTargetConverter extends PGinetConverter implements Converter {
 
     @Override
     public PGinet convertObjectValueToDataValue(Object objectValue, Session session) {
-        if (objectValue == null) {
+        if(objectValue == null) {
             return null;
         } else if (objectValue instanceof IPTarget) {
             return (IPTarget) objectValue;
-        } else if (objectValue instanceof PGinet) {
-            return (PGinet) objectValue;
-        } else if (objectValue instanceof String) {
-            try {
-                return new PGinet((String) objectValue);
-            } catch (SQLException ex) {
-                throw new IllegalArgumentException("Unable to convert an object value", ex);
-            }
         }
 
-        throw new IllegalArgumentException("Unable to convert object value of type "
-                + objectValue.getClass().getName() + " into a "
-                + PGinet.class.getName());
+        return super.convertObjectValueToDataValue(objectValue, session);
     }
 
     @Override
     public IPTarget convertDataValueToObjectValue(Object dataValue, Session session) {
-        IPTarget ip = null;
+        IPTarget net = null;
         if (dataValue == null) {
-            return ip;
-        } else if (dataValue instanceof PGinet) {
-            ip = new IPTarget((PGinet) dataValue);
-        } else if (dataValue instanceof PGobject) {
-            // this is a fallback in case special JDBC types are not available...
-            ip = new IPTarget(((PGobject) dataValue).getValue());
+            return net;
+        } else {
+            PGinet inet = super.convertDataValueToObjectValue(dataValue, session);
+            if(inet != null) {
+                net = new IPTarget(inet);
+            }
         }
 
-        if (ip == null) {
+        if (net == null) {
             throw new IllegalArgumentException("Unable to convert data value of type "
                     + dataValue.getClass().getName() + " into a "
                     + IPTarget.class.getName());
         }
 
-        return ip;
-    }
-
-    @Override
-    public boolean isMutable() {
-        return false;
-    }
-
-    @Override
-    public void initialize(DatabaseMapping mapping, Session session) {
-        final DatabaseField field = mapping.getField();
-        field.setSqlType(java.sql.Types.OTHER);
-        field.setTypeName("inet");
-        field.setColumnDefinition("INET");
+        return net;
     }
 }
