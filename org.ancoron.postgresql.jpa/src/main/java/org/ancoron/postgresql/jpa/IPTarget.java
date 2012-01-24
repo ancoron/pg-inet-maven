@@ -172,7 +172,6 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
     public int hashCode() {
         int hash = 7;
         hash = 17 * hash + Arrays.hashCode(this.addr);
-        hash = 17 * hash + this.netmask;
         return hash;
     }
 
