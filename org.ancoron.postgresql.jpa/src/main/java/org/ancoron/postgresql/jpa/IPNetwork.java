@@ -76,7 +76,7 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
         if(addr != null) {
             v6 = addr.length == 16;
             
-            if(!v6) {
+            if(!v6 || hasEmbeddedIPv4()) {
                 broadcastAddress = high();
             } else {
                 broadcastAddress = null;

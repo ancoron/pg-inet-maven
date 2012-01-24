@@ -110,7 +110,7 @@ public class IPNetworkTest {
 
         assertIPNetwork("2002::123.45.67.64/122",
                 122,
-                null,
+                "2002::7b2d:437f",
                 "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffc0",
                 "::3f",
                 "2002::7b2d:4341",
