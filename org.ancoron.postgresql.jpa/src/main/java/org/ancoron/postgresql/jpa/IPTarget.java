@@ -480,6 +480,29 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
     }
 
     /**
+     * This method implements the <tt>subtract</tt> operator to get a new
+     * IPTarget based on the current one and an offset.
+     * 
+     * <p>
+     * This is just a convenience method and is exactly the same as calling 
+     * <tt>add(BigInteger.valueOf(offset))</tt>.
+     * </p>
+     * 
+     * @param offset The offset (within reasonable limits)
+     * 
+     * @return A new IPTarget instance or <tt>null</tt> if the given argument
+     * was null
+     * 
+     * @throws IllegalArgumentException if the given offset is not within a
+     * reasonable range
+     * 
+     * @see #subtract(java.math.BigInteger) 
+     */
+    public IPTarget subtract(long offset) {
+        return subtract(BigInteger.valueOf(offset));
+    }
+
+    /**
      * This method implements the <tt>add</tt> operator to get a new
      * IPTarget based on the current one and an offset.
      * 
