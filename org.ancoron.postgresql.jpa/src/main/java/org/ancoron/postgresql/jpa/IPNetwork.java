@@ -260,7 +260,15 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     }
 
     /**
-     * Check if the network is made IPv4 compatible.
+     * Check if the IPv6 network is made IPv4 compatible.
+     * 
+     * <p>
+     * The following formats are detected:
+     * <ul>
+     * <li><tt>::a.b.c.d/96</tt></li>
+     * <li><tt>::ffff:a.b.c.d/96</tt></li>
+     * </ul>
+     * </p>
      * 
      * @return <tt>true</tt> if this network is IPv4 compatible, <tt>false</tt>
      * otherwise
