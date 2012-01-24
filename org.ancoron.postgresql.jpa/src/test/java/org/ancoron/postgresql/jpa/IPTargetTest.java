@@ -15,6 +15,7 @@
  */
 package org.ancoron.postgresql.jpa;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
@@ -56,6 +57,69 @@ public class IPTargetTest {
         assertIPTarget("fe80::20e:cff:fe33:d204", 128, bytes("00:0e:0c:33:d2:04"), InetAddress.getByName("ff02::1:ff33:d204"));
         assertIPTarget("::", 128, null, null);
         assertIPTarget("::1", 128, null, null);
+    }
+    
+    @Test
+    public void testSubtract() throws Exception {
+        assertSubtract("192.168.1.43", "192.168.1.19", "24");
+
+        assertSubtract("fe80::20e:cff:fe33:d204", "fe80::20e:c00:fe33:d204", "1095216660480");
+
+        assertSubtract("fe80::20e:cff:0033:d204", "fe80::20e:cff:fe33:d204", "-4261412864");
+
+        assertSubtract("fe80::20e:cff:fe33:d204", "fe00::20e:cff:fe33:d204", "664613997892457936451903530140172288");
+
+        assertSubtract("fe80::20e:cff:fe33:d204", null, null);
+    }
+
+    @Test
+    public void testSubtract2() throws Exception {
+        assertSubtract2("192.168.1.43", "24", "192.168.1.19");
+
+        assertSubtract2("fe80::20e:c00:fe33:d204", "-1095216660480", "fe80::20e:cff:fe33:d204");
+
+        assertSubtract2("fe80::20e:cff:fe33:d204", "4261412864", "fe80::20e:cff:0033:d204");
+
+        assertSubtract2("fe00::20e:cff:fe33:d204", "-664613997892457936451903530140172288", "fe80::20e:cff:fe33:d204");
+        
+        // test negative...
+        assertSubtract2Negative("192.168.1.43", "-664613997892457936451903530140172288");
+        assertSubtract2Negative("192.168.1.43", "664613997892457936451903530140172288");
+    }
+
+    private void assertSubtract(String ipa, String ipb, String res) {
+        IPTarget a = new IPTarget(ipa);
+        IPTarget b = null;
+        
+        if(ipb != null) {
+            b = new IPTarget(ipb);
+        }
+        
+        BigInteger rb = null;
+        if(res != null) {
+            rb = new BigInteger(res);
+        }
+        
+        Assert.assertEquals("Unexpected result for '" + ipa + "'.subtract('" + ipb + "')", rb, a.subtract(b));
+    }
+
+    private void assertSubtract2(String ipa, String offset, String res) {
+        IPTarget a = new IPTarget(ipa);
+        BigInteger off = new BigInteger(offset);
+        
+        Assert.assertEquals("Unexpected result for '" + ipa + "'.subtract('" + offset + "')", new IPTarget(res), a.subtract(off));
+    }
+
+    private void assertSubtract2Negative(String ipa, String offset) {
+        IPTarget a = new IPTarget(ipa);
+        BigInteger off = new BigInteger(offset);
+
+        try {
+            IPTarget b = a.subtract(off);
+            Assert.fail("Expected an IllegalArgumentException but got a result: " + b);
+        } catch(IllegalArgumentException x) {
+            // expected...
+        }
     }
 
     protected byte[] bytes(String spec) {

@@ -21,6 +21,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.postgresql.net.PGinet;
 
 /**
@@ -29,6 +31,23 @@ import org.postgresql.net.PGinet;
  */
 public class IPTarget extends PGinet implements Serializable, Cloneable, Comparable<IPTarget> {
 
+    public static final InetAddress MAX_V4_ADDRESS;
+    public static final BigInteger MAX_V4_VALUE;
+    public static final InetAddress MAX_V6_ADDRESS;
+    public static final BigInteger MAX_V6_VALUE;
+    
+    static {
+        try {
+            MAX_V4_ADDRESS = InetAddress.getByName("255.255.255.255");
+            MAX_V6_ADDRESS = InetAddress.getByName("ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+        } catch (UnknownHostException ex) {
+            throw new IllegalStateException();
+        }
+        
+        MAX_V4_VALUE = new BigInteger(1, MAX_V4_ADDRESS.getAddress());
+        MAX_V6_VALUE = new BigInteger(1, MAX_V6_ADDRESS.getAddress());
+    }
+    
     private InetAddress host;
     
     private boolean v6 = false;
@@ -387,5 +406,76 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         }
         
         return null;
+    }
+    
+    /**
+     * This method implements the <tt>subtract</tt> operator to get the
+     * difference between two IPTarget instances.
+     * 
+     * @param ip An IPTarget of the same type (IPv4/IPv6)
+     * 
+     * @return A positive or negative {@link BigInteger} value if the given
+     * IPTarget is lower or higher than this instance or <tt>null</tt> if the
+     * given argument is <tt>null</tt>
+     * 
+     * @throws IllegalArgumentException if the given IPTarget is of different
+     * size (IPv4 vs. IPv6)
+     */
+    public BigInteger subtract(IPTarget ip) {
+        if(ip == null) {
+            return null;
+        }
+
+        if(this.v6 != ip.v6) {
+            throw new IllegalArgumentException("Cannot subtract IPTarget value "
+                    + ip + " from " + this + " - different sizes");
+        }
+        
+        BigInteger a = new BigInteger(1, this.addr);
+        BigInteger b = new BigInteger(1, ip.addr);
+        
+        return a.subtract(b);
+    }
+
+    /**
+     * This method implements the <tt>subtract</tt> operator to get a new
+     * IPTarget based on the current one and an offset.
+     * 
+     * @param offset The offset (within reasonable limits)
+     * 
+     * @return A new IPTarget instance or <tt>null</tt> if the given argument
+     * was null
+     * 
+     * @throws IllegalArgumentException if the given offset is not within a
+     * reasonable range
+     */
+    public IPTarget subtract(BigInteger offset) {
+        if(offset == null) {
+            return null;
+        }
+        
+        if(offset.compareTo(BigInteger.ZERO) == 0) {
+            return new IPTarget(this);
+        }
+        
+        BigInteger a = new BigInteger(1, this.addr);
+        
+        byte[] ip = new byte[addr.length];
+        BigInteger bi = a.subtract(offset);
+
+        if(bi.compareTo(BigInteger.ZERO) < 0
+                || !v6 && bi.compareTo(MAX_V4_VALUE) > 0
+                || v6 && bi.compareTo(MAX_V6_VALUE) > 0) {
+            // exceeding highest IP address...
+            throw new IllegalArgumentException("Cannot subtract value "
+                    + offset + " from " + this + " - result is out of range");
+        }
+        
+        byte[] b = bi.toByteArray();
+
+        // handle sign bit...
+        System.arraycopy(b, (b.length == ip.length + 1) ? 1 : 0, ip, 0, ip.length);
+        
+        return new IPTarget(ip);
     }
 }
