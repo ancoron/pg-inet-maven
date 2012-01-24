@@ -81,10 +81,56 @@ public class IPTargetTest {
         assertSubtract2("fe80::20e:cff:fe33:d204", "4261412864", "fe80::20e:cff:0033:d204");
 
         assertSubtract2("fe00::20e:cff:fe33:d204", "-664613997892457936451903530140172288", "fe80::20e:cff:fe33:d204");
+
+        assertSubtract2("fe00::20e:cff:fe33:d204", null, null);
         
         // test negative...
         assertSubtract2Negative("192.168.1.43", "-664613997892457936451903530140172288");
         assertSubtract2Negative("192.168.1.43", "664613997892457936451903530140172288");
+    }
+
+    @Test
+    public void testAdd() throws Exception {
+        assertAdd("192.168.1.43", "-24", "192.168.1.19");
+
+        assertAdd("fe80::20e:c00:fe33:d204", "1095216660480", "fe80::20e:cff:fe33:d204");
+
+        assertAdd("fe80::20e:cff:fe33:d204", "-4261412864", "fe80::20e:cff:0033:d204");
+
+        assertAdd("fe00::20e:cff:fe33:d204", "664613997892457936451903530140172288", "fe80::20e:cff:fe33:d204");
+
+        assertAdd("fe80::20e:cff:fe33:d204", null, null);
+        
+        // test negative...
+        assertAddNegative("192.168.1.43", "-664613997892457936451903530140172288");
+        assertAddNegative("192.168.1.43", "664613997892457936451903530140172288");
+    }
+
+    private void assertSubtract2(String ipa, String offset, String res) {
+        IPTarget a = new IPTarget(ipa);
+        BigInteger off = null;
+        if(offset != null) {
+            off = new BigInteger(offset);
+        }
+        
+        IPTarget b = null;
+        if(res != null) {
+            b = new IPTarget(res);
+        }
+        
+        Assert.assertEquals("Unexpected result for '" + ipa + "'.subtract('" + offset + "')", b, a.subtract(off));
+    }
+
+    private void assertSubtract2Negative(String ipa, String offset) {
+        IPTarget a = new IPTarget(ipa);
+        BigInteger off = new BigInteger(offset);
+
+        try {
+            IPTarget b = a.subtract(off);
+            Assert.fail("Expected an IllegalArgumentException but got a result: " + b);
+        } catch(IllegalArgumentException x) {
+            // expected...
+        }
     }
 
     private void assertSubtract(String ipa, String ipb, String res) {
@@ -103,19 +149,27 @@ public class IPTargetTest {
         Assert.assertEquals("Unexpected result for '" + ipa + "'.subtract('" + ipb + "')", rb, a.subtract(b));
     }
 
-    private void assertSubtract2(String ipa, String offset, String res) {
+    private void assertAdd(String ipa, String offset, String res) {
         IPTarget a = new IPTarget(ipa);
-        BigInteger off = new BigInteger(offset);
+        BigInteger off = null;
+        if(offset != null) {
+            off = new BigInteger(offset);
+        }
         
-        Assert.assertEquals("Unexpected result for '" + ipa + "'.subtract('" + offset + "')", new IPTarget(res), a.subtract(off));
+        IPTarget b = null;
+        if(res != null) {
+            b = new IPTarget(res);
+        }
+        
+        Assert.assertEquals("Unexpected result for '" + ipa + "'.add('" + offset + "')", b, a.add(off));
     }
 
-    private void assertSubtract2Negative(String ipa, String offset) {
+    private void assertAddNegative(String ipa, String offset) {
         IPTarget a = new IPTarget(ipa);
         BigInteger off = new BigInteger(offset);
 
         try {
-            IPTarget b = a.subtract(off);
+            IPTarget b = a.add(off);
             Assert.fail("Expected an IllegalArgumentException but got a result: " + b);
         } catch(IllegalArgumentException x) {
             // expected...

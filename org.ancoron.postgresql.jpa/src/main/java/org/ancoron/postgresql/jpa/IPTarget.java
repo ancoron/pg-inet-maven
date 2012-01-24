@@ -478,4 +478,70 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         
         return new IPTarget(ip);
     }
+
+    /**
+     * This method implements the <tt>add</tt> operator to get a new
+     * IPTarget based on the current one and an offset.
+     * 
+     * @param offset The offset (within reasonable limits)
+     * 
+     * @return A new IPTarget instance or <tt>null</tt> if the given argument
+     * was null
+     * 
+     * @throws IllegalArgumentException if the given offset is not within a
+     * reasonable range
+     */
+    public IPTarget add(BigInteger offset) {
+        if(offset == null) {
+            return null;
+        }
+        
+        if(offset.compareTo(BigInteger.ZERO) == 0) {
+            return new IPTarget(this);
+        }
+        
+        BigInteger a = new BigInteger(1, this.addr);
+        
+        byte[] ip = new byte[addr.length];
+        BigInteger bi = a.add(offset);
+
+        if(bi.compareTo(BigInteger.ZERO) < 0
+                || !v6 && bi.compareTo(MAX_V4_VALUE) > 0
+                || v6 && bi.compareTo(MAX_V6_VALUE) > 0) {
+            // exceeding highest IP address...
+            throw new IllegalArgumentException("Cannot add value "
+                    + offset + " from " + this + " - result is out of range");
+        }
+        
+        byte[] b = bi.toByteArray();
+
+        // handle sign bit...
+        System.arraycopy(b, (b.length == ip.length + 1) ? 1 : 0, ip, 0, ip.length);
+        
+        return new IPTarget(ip);
+    }
+
+    /**
+     * This method implements the <tt>add</tt> operator to get a new
+     * IPTarget based on the current one and an offset.
+     * 
+     * <p>
+     * This is just a convenience method and is exactly the same as calling 
+     * <tt>add(BigInteger.valueOf(offset))</tt>.
+     * </p>
+     * 
+     * @param offset The offset (within reasonable limits)
+     * 
+     * @return A new IPTarget instance or <tt>null</tt> if the given argument
+     * was null
+     * 
+     * @throws IllegalArgumentException if the given offset is not within a
+     * reasonable range
+     * 
+     * @see #add(java.math.BigInteger) 
+     */
+    public IPTarget add(long offset) {
+        // we use 'valueOf' to benefit from internal caching...
+        return add(BigInteger.valueOf(offset));
+    }
 }
