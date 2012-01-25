@@ -17,6 +17,7 @@ package org.ancoron.postgresql.jpa;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
@@ -565,5 +566,230 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
     public IPTarget add(long offset) {
         // we use 'valueOf' to benefit from internal caching...
         return add(BigInteger.valueOf(offset));
+    }
+    
+    /**
+     * Check if this represents an IP multicast address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isMulticastAddress()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a multicast address,
+     * <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isMulticastAddress() 
+     */
+    public boolean isMulticast() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isMulticastAddress();
+    }
+    
+    /**
+     * Check if this represents a global multicast address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isMCGlobal()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a global multicast 
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isMCGlobal() 
+     */
+    public boolean isMulticastGlobal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isMCGlobal();
+    }
+    
+    /**
+     * Check if this represents a link-local multicast address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isMCLinkLocal()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a link-local multicast 
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isMCLinkLocal() 
+     */
+    public boolean isMulticastLinkLocal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isMCLinkLocal();
+    }
+    
+    /**
+     * Check if this represents a node-local multicast address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isMCNodeLocal()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a node-local multicast 
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isMCNodeLocal() 
+     */
+    public boolean isMulticastNodeLocal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isMCNodeLocal();
+    }
+    
+    /**
+     * Check if this represents a organization-local multicast address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isMCOrgLocal()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a org-local multicast 
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isMCOrgLocal() 
+     */
+    public boolean isMulticastOrgLocal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isMCOrgLocal();
+    }
+    
+    /**
+     * Check if this represents a site-local multicast address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isMCSiteLocal()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a site-local multicast 
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isMCSiteLocal() 
+     */
+    public boolean isMulticastSiteLocal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isMCSiteLocal();
+    }
+    
+    /**
+     * Check if this represents a link-local address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isLinkLocalAddress()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents a link-local
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isLinkLocalAddress() 
+     */
+    public boolean isLinkLocal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isLinkLocalAddress();
+    }
+    
+    /**
+     * Check if this represents the any-local address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isAnyLocalAddress()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents the any-local
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isAnyLocalAddress() 
+     */
+    public boolean isAnyLocal() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isAnyLocalAddress();
+    }
+    
+    /**
+     * Check if this represents the loopback address.
+     * 
+     * <p>
+     * Invoking this method is exactly the same as using 
+     * <tt>getHost().isLoopbackAddress()</tt>.
+     * </p>
+     *
+     * @return <tt>true</tt> if this IPTarget represents the loopback
+     * address, <tt>false</tt> otherwise
+     * 
+     * @throws IllegalStateException if this instance is not yet initialized 
+     * with a value or has been reset by calling {@link #init() } on an already
+     * initialized instance
+     * 
+     * @see #getHost() 
+     * @see InetAddress#isLoopbackAddress() 
+     */
+    public boolean isLoopback() {
+        if(host == null) {
+            throw new IllegalStateException("IPTarget is not yet initialized or has been reset");
+        }
+        return host.isLoopbackAddress();
     }
 }
