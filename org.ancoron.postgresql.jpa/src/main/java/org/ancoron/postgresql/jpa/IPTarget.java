@@ -17,13 +17,10 @@ package org.ancoron.postgresql.jpa;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.postgresql.net.PGinet;
 
 /**
