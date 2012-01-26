@@ -30,13 +30,19 @@ import org.postgresql.util.PGobject;
  * Example usage:
  * 
  * <pre>
- * @Entity
- * @Converter(name="pginetConverter", converterClass=PGinetConverter.class)
+ * // ...
+ * import org.postgresql.net.PGinet;
+ * import org.ancoron.postgresql.jpa.eclipselink.PGinetConverter;
+ * 
+ * // ...
+ * 
+ * &#064;Entity
+ * &#064;Converter(name="pginetConverter", converterClass=PGinetConverter.class)
  * public class PGinetEntity implements Serializable {
  *     
  * 
- *     @Convert("pginetConverter")
- *     @Column(name="c_net")
+ *     &#064;Convert("pginetConverter")
+ *     &#064;Column(name="c_net")
  *     private PGinet net;
  * 
  *     // ...
