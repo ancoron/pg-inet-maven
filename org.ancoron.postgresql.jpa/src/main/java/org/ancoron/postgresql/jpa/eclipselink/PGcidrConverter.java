@@ -18,6 +18,7 @@ package org.ancoron.postgresql.jpa.eclipselink;
 import java.sql.SQLException;
 import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.mappings.DatabaseMapping;
+import org.eclipse.persistence.mappings.DirectCollectionMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.sessions.Session;
 import org.postgresql.net.PGcidr;
@@ -109,7 +110,14 @@ public class PGcidrConverter implements Converter {
 
     @Override
     public void initialize(DatabaseMapping mapping, Session session) {
-        final DatabaseField field = mapping.getField();
+        final DatabaseField field;
+        if(mapping instanceof DirectCollectionMapping) {
+            // handle @ElementCollection...
+            field = ((DirectCollectionMapping) mapping).getDirectField();
+        } else {
+            field = mapping.getField();
+        }
+
         field.setSqlType(java.sql.Types.OTHER);
         field.setTypeName("cidr");
         field.setColumnDefinition("CIDR");
