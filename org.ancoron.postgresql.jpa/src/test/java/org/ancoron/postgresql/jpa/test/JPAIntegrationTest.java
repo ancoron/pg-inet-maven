@@ -15,7 +15,9 @@
  */
 package org.ancoron.postgresql.jpa.test;
 
+import java.net.InetAddress;
 import java.sql.Driver;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -211,6 +213,89 @@ public class JPAIntegrationTest {
 
             log.log(Level.INFO, "AdvancedNetworkEntity with ID {0} ({1}) has been found :)",
                     new Object[] {currentId, net.getNetwork().getValue()});
+        } catch (Exception ex) {
+            if(em.getTransaction() != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            
+            throw ex;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
+    
+
+    @Test
+    public void testNetworkConfigEntity() throws Exception {
+        EntityManager em = emFactory.createEntityManager();
+        try {
+            // testing persist() ...
+            em.getTransaction().begin();
+
+            IPNetwork def = new IPNetwork("192.168.107.0/24");
+            InetAddress gw = InetAddress.getByName("192.168.107.1");
+            List<IPTarget> dns = new ArrayList<IPTarget>();
+            dns.add(new IPTarget("192.168.107.32"));
+            dns.add(new IPTarget("192.168.107.33"));
+            dns.add(new IPTarget("192.168.107.1"));
+            NetworkConfiguration nc = new NetworkConfiguration(def, gw, dns);
+
+            em.persist(nc);
+            Assert.assertTrue(em.contains(nc));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("NetworkConfiguration with definition "
+                    + nc.getDefinition().getValue() + " was not persisted",
+                    nc.getId());
+
+            log.log(Level.INFO, "NetworkConfiguration with definition {0} has been persisted :)",
+                    nc.getDefinition().getValue());
+
+            Long currentId = nc.getId();
+            
+            // clear cache...
+            em.detach(nc);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(nc));
+
+            // testing find...
+            em.getTransaction().begin();
+
+            nc = em.find(NetworkConfiguration.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("NetworkConfiguration with ID " + currentId + " was not found", nc);
+            Assert.assertTrue(em.contains(nc));
+
+            log.log(Level.INFO, "NetworkConfiguration with ID {0} ({1}) has been found :)",
+                    new Object[] {currentId, nc.getDefinition().getValue()});
+            
+            // testing query...
+            em.getTransaction().begin();
+
+            String table = NetworkConfiguration.class.getAnnotation(Table.class).name();
+            String column = NetworkConfiguration.class.getDeclaredField("definition").getAnnotation(Column.class).name();
+            Query q = em.createNativeQuery("SELECT b.c_id, b.c_def, b.c_gateway FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
+            q.setParameter("IPADDR", new IPTarget("192.168.107.67"));
+            List networks = q.getResultList();
+            
+            em.getTransaction().commit();
+            Assert.assertEquals("Number of found NetworkConfigurations", 1, networks.size());
+            
+            log.warning("Using workaround for EclipseLink bug #321649");
+            // net = (AdvancedNetworkEntity) networks.get(0);
+            // Assert.assertTrue(em.contains(net));
+            Object[] o = (Object[]) networks.get(0);
+            nc = new NetworkConfiguration();
+            nc.setId((Long) o[0]);
+            nc.setDefinition(new IPNetwork(((PGobject) o[1]).getValue()));
+            nc.setGateway(InetAddress.getByName(((PGobject) o[1]).getValue().split("/")[0]));
+
+
+            log.log(Level.INFO, "NetworkConfiguration with ID {0} ({1}) has been found :)",
+                    new Object[] {currentId, nc.getDefinition().getValue()});
         } catch (Exception ex) {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();

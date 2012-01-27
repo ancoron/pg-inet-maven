@@ -4,6 +4,7 @@
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <class>org.ancoron.postgresql.jpa.test.PGinetEntity</class>
         <class>org.ancoron.postgresql.jpa.test.AdvancedNetworkEntity</class>
+        <class>org.ancoron.postgresql.jpa.test.NetworkConfiguration</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <!--
