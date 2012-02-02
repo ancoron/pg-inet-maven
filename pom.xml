@@ -10,7 +10,7 @@
 
     <groupId>org.ancoron.postgresql</groupId>
     <artifactId>pginet-parent</artifactId>
-    <version>9.1.901.jdbc4.1-SNAPSHOT</version>
+    <version>8.4.702.jdbc4.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>PostgreSQL Network Types Parent</name>
@@ -19,7 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <patch.version>1</patch.version>
-        <postgresql.base.version>9.1-901-1</postgresql.base.version>
+        <postgresql.base.version>8.4-702</postgresql.base.version>
         <jdbc.type>4</jdbc.type>
         <postgresql.version>${postgresql.base.version}.jdbc${jdbc.type}</postgresql.version>
 
