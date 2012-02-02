@@ -94,6 +94,20 @@ public class QuickTests {
         netmask = 65;
         System.out.println("Netmask: " + toString(netmask(addr, netmask)));
         System.out.println("Hostmask: " + toString(hostmask(addr, netmask)));
+        
+        int n = (int) Math.pow(2, 30);
+        
+        int x = 1;
+
+        while((1<<x) < n) {
+            System.out.println("n = " + n + " <<< x = " + x + " (" + (1<<x) + ")");
+            x++;
+            if(x > 30) {
+                break;
+            }
+        }
+        
+        System.out.println("n = " + n + " >>> x = " + x + " ((1<<" + x + ") = " + (1<<x) + ")");
     }
 
     private static byte[] previous(byte[] addr) {
