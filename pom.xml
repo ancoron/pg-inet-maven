@@ -10,7 +10,7 @@
 
     <groupId>org.ancoron.postgresql</groupId>
     <artifactId>pginet-parent</artifactId>
-    <version>9.1.901.jdbc4.1-SNAPSHOT</version>
+    <version>9.1.901.jdbc4.1-rc3</version>
     <packaging>pom</packaging>
 
     <name>PostgreSQL Network Types Parent</name>
