@@ -17,6 +17,8 @@ package org.ancoron.postgresql.jpa;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import org.postgresql.net.PGcidr;
@@ -173,6 +175,18 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     public void setV6(boolean v6) {
         this.v6 = v6;
     }
+
+    public void setEmbeddedIPv4(boolean embeddedIPv4) {
+        if(embeddedIPv4 != this.embedded_ipv4) {
+            this.addrString = null;
+        }
+        
+        this.embedded_ipv4 = embeddedIPv4;
+        
+        if(addrString == null) {
+            getValue();
+        }
+    }
     
     @Override
     public boolean equals(Object obj) {
@@ -260,7 +274,8 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     }
 
     /**
-     * Check if the IPv6 network is made IPv4 compatible.
+     * Check if the IPv6 network is made IPv4 compatible or has an embedded
+     * IPv4 address.
      * 
      * <p>
      * The following formats are detected:
@@ -268,9 +283,18 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
      * <li><tt>::a.b.c.d/96</tt></li>
      * <li><tt>::ffff:a.b.c.d/96</tt></li>
      * </ul>
+     * In addition in case an IPv6 network has been created using an embedded
+     * IPv4 address this method will also respect that fact.
      * </p>
      * 
-     * @return <tt>true</tt> if this network is IPv4 compatible, <tt>false</tt>
+     * <p>
+     * Please note that an embedded IPv4 address is only available transiently
+     * and this additional information is lost when an instance is retrieved
+     * from the database.
+     * </p>
+     * 
+     * @return <tt>true</tt> if this network is IPv4 compatible or has an
+     * embedded IPv4 address per specification, <tt>false</tt>
      * otherwise
      */
     public boolean hasEmbeddedIPv4() {
@@ -332,5 +356,44 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
     public boolean contains(IPTarget ip) {
         return getLowestTarget().compareTo(ip) <= 0
                 && getHighestTarget().compareTo(ip) >= 0;
+    }
+
+    public byte[] getAddr() {
+        return addr;
+    }
+    
+    /**
+     * Calculates the next higher network with the same mask length.
+     * 
+     * <p>
+     * E.g., if an instance has been created using 
+     * <code>192.168.107.0/25</code> the result would be
+     * <code>192.168.107.128/25</code>.
+     * </p>
+     * 
+     * @return The next higher network
+     */
+    public IPNetwork next() {
+        BigInteger hi = new BigInteger(1, high());
+        hi = hi.add(BigInteger.ONE);
+        byte[] ip = new byte[addr.length];
+        byte[] b = hi.toByteArray();
+
+        // handle sign bit...
+        System.arraycopy(b, (b.length == ip.length + 1) ? 1 : 0, ip, 0, ip.length);
+        
+        IPNetwork next = null;
+        
+        try {
+            InetAddress inet = InetAddress.getByAddress(ip);
+            next = new IPNetwork(inet.getHostAddress() + "/" + netmask);
+
+            // preserve embbeded IPv4 addresses...
+            next.setEmbeddedIPv4(hasEmbeddedIPv4());
+        } catch(UnknownHostException x) {
+            throw new IllegalStateException("Unable to calculate next network for " + getValue(), x);
+        }
+        
+        return next;
     }
 }
