@@ -28,6 +28,7 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.test.TestUtil;
+import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.junit.Test;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -120,19 +121,16 @@ public class MappingIntegrationTest {
 
             String table = NetworkEntity.class.getAnnotation(Table.class).name();
             String column = NetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
-            Query q = em.createNativeQuery("SELECT * FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
+            Query q = em.createNativeQuery("SELECT * FROM " + table + " b WHERE b." + column + " >>= #IPADDR",
+                    NetworkEntity.class);
             q.setParameter("IPADDR", new IPNetwork("10.10.1.6"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
             Assert.assertEquals("Number of found NetworkEntities", 1, networks.size());
             
-            log.warning("Using workaround for EclipseLink bug #321649");
-            // net = (NetworkEntity) networks.get(0);
-            // Assert.assertTrue(em.contains(net));
-            Object[] o = (Object[]) networks.get(0);
-            net = new NetworkEntity(new IPNetwork(((PGobject) o[1]).getValue()));
-            net.setId((Long) o[0]);
+            net = (NetworkEntity) networks.get(0);
+            Assert.assertTrue(em.contains(net));
 
             log.log(Level.INFO, "NetworkEntity with ID {0} ({1}) has been found :)",
                     new Object[] {currentId, net.getNetwork().getValue()});

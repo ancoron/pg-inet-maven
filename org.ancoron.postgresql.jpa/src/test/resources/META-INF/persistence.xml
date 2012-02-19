@@ -19,6 +19,7 @@
             <property name="connection.autocommit" value="false"/>
             <property name="eclipselink.persistence-context.flush-mode" value="COMMIT"/>
             <property name="eclipselink.jdbc.batch-writing" value="JDBC"/>
+            <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
 
             <!--
             <property name="eclipselink.profiler" value="PerformanceProfiler"/>
@@ -43,6 +44,7 @@
             <property name="connection.autocommit" value="false"/>
             <property name="eclipselink.persistence-context.flush-mode" value="COMMIT"/>
             <property name="eclipselink.jdbc.batch-writing" value="JDBC"/>
+            <property name="eclipselink.jpa.uppercase-column-names" value="true"/>
 
             <!--
             <property name="eclipselink.profiler" value="PerformanceProfiler"/>

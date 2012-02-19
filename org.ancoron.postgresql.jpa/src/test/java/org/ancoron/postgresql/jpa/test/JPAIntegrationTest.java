@@ -122,19 +122,16 @@ public class JPAIntegrationTest {
 
             String table = PGinetEntity.class.getAnnotation(Table.class).name();
             String column = PGinetEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
-            Query q = em.createNativeQuery("SELECT b.* FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
+            Query q = em.createNativeQuery("SELECT b.* FROM " + table + " b WHERE b." + column + " >>= #IPADDR",
+                    PGinetEntity.class);
             q.setParameter("IPADDR", new PGinet("10.10.1.6"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
             Assert.assertEquals("Number of found PGinetEntities", 1, networks.size());
             
-            log.warning("Using workaround for EclipseLink bug #321649");
-            // net = (PGinetEntity) networks.get(0);
-            // Assert.assertTrue(em.contains(net));
-            Object[] o = (Object[]) networks.get(0);
-            net = new PGinetEntity(((PGobject) o[1]).getValue());
-            net.setId((Long) o[0]);
+            net = (PGinetEntity) networks.get(0);
+            Assert.assertTrue(em.contains(net));
 
             log.log(Level.INFO, "PGinetEntity with ID {0} ({1}) has been found :)",
                     new Object[] {currentId, net.getNetwork().getValue()});
@@ -195,21 +192,16 @@ public class JPAIntegrationTest {
 
             String table = AdvancedNetworkEntity.class.getAnnotation(Table.class).name();
             String column = AdvancedNetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
-            Query q = em.createNativeQuery("SELECT b.c_id, b.c_network FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
+            Query q = em.createNativeQuery("SELECT b.c_id, b.c_network FROM " + table + " b WHERE b." + column + " >>= #IPADDR",
+                    AdvancedNetworkEntity.class);
             q.setParameter("IPADDR", new IPTarget("10.10.1.6"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
             Assert.assertEquals("Number of found AdvancedNetworkEntities", 1, networks.size());
             
-            log.warning("Using workaround for EclipseLink bug #321649");
-            // net = (AdvancedNetworkEntity) networks.get(0);
-            // Assert.assertTrue(em.contains(net));
-            Object[] o = (Object[]) networks.get(0);
-            net = new AdvancedNetworkEntity();
-            net.setId((Long) o[0]);
-            net.setNetwork(new IPNetwork(((PGobject) o[1]).getValue()));
-
+            net = (AdvancedNetworkEntity) networks.get(0);
+            Assert.assertTrue(em.contains(net));
 
             log.log(Level.INFO, "AdvancedNetworkEntity with ID {0} ({1}) has been found :)",
                     new Object[] {currentId, net.getNetwork().getValue()});
@@ -277,22 +269,16 @@ public class JPAIntegrationTest {
 
             String table = NetworkConfiguration.class.getAnnotation(Table.class).name();
             String column = NetworkConfiguration.class.getDeclaredField("definition").getAnnotation(Column.class).name();
-            Query q = em.createNativeQuery("SELECT b.c_id, b.c_def, b.c_gateway FROM " + table + " b WHERE b." + column + " >>= #IPADDR");
+            Query q = em.createNativeQuery("SELECT * FROM " + table + " b WHERE b." + column + " >>= #IPADDR",
+                    NetworkConfiguration.class);
             q.setParameter("IPADDR", new IPTarget("192.168.107.67"));
             List networks = q.getResultList();
             
             em.getTransaction().commit();
             Assert.assertEquals("Number of found NetworkConfigurations", 1, networks.size());
             
-            log.warning("Using workaround for EclipseLink bug #321649");
-            // net = (AdvancedNetworkEntity) networks.get(0);
-            // Assert.assertTrue(em.contains(net));
-            Object[] o = (Object[]) networks.get(0);
-            nc = new NetworkConfiguration();
-            nc.setId((Long) o[0]);
-            nc.setDefinition(new IPNetwork(((PGobject) o[1]).getValue()));
-            nc.setGateway(InetAddress.getByName(((PGobject) o[1]).getValue().split("/")[0]));
-
+            nc = (NetworkConfiguration) networks.get(0);
+            Assert.assertTrue(em.contains(nc));
 
             log.log(Level.INFO, "NetworkConfiguration with ID {0} ({1}) has been found :)",
                     new Object[] {currentId, nc.getDefinition().getValue()});
