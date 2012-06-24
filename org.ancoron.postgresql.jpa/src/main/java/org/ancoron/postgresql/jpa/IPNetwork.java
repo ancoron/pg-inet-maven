@@ -396,4 +396,12 @@ public class IPNetwork extends PGcidr implements Serializable, Cloneable, Compar
         
         return next;
     }
+
+    @Override
+    public String toString() {
+        if(addr == null) {
+            return null;
+        }
+        return super.toString();
+    }
 }

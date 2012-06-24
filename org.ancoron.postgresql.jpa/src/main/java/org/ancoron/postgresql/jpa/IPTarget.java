@@ -789,4 +789,12 @@ public class IPTarget extends PGinet implements Serializable, Cloneable, Compara
         }
         return host.isLoopbackAddress();
     }
+
+    @Override
+    public String toString() {
+        if(addr == null) {
+            return null;
+        }
+        return super.toString();
+    }
 }
