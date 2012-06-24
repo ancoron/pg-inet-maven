@@ -1,0 +1,12 @@
+Index: org/postgresql/net/PGNetworkBase.java
+--- org/postgresql/net/PGNetworkBase.java Base (BASE)
++++ org/postgresql/net/PGNetworkBase.java Locally Modified (Based On LOCAL)
+@@ -324,7 +324,7 @@
+ 	 */
+ 	public String getValue()
+ 	{
+-		if( this.addrString == null )
++		if( this.addrString == null && this.addr != null)
+ 		{
+ 			StringBuffer s = new StringBuffer();
+ 			boolean isIPv4 = (this.addr.length == 4) ? true : false;
