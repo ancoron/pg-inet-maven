@@ -149,6 +149,76 @@ public class JPAIntegrationTest {
     }
 
     @Test
+    public void testNull() throws Exception {
+        EntityManager em = emFactory.createEntityManager();
+        try {
+            // testing persist() ...
+            em.getTransaction().begin();
+
+            AdvancedNetworkEntity net = new AdvancedNetworkEntity(new IPNetwork());
+            
+            em.persist(net);
+            Assert.assertTrue(em.contains(net));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("AdvancedNetworkEntity with PGinet "
+                    + net.getNetwork().getValue() + " was not persisted",
+                    net.getId());
+
+            log.log(Level.INFO, "AdvancedNetworkEntity with PGinet {0} has been persisted :)",
+                    net.getNetwork().getValue());
+
+            Long currentId = net.getId();
+
+            // clear cache...
+            em.detach(net);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(net));
+
+            // testing find...
+            em.getTransaction().begin();
+
+            net = em.find(AdvancedNetworkEntity.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("AdvancedNetworkEntity with ID " + currentId + " was not found", net);
+            Assert.assertTrue(em.contains(net));
+
+            log.log(Level.INFO, "AdvancedNetworkEntity with ID {0} ({1}) has been found :)",
+                    new Object[] {currentId, net.getNetwork()});
+
+            // clear cache...
+            em.detach(net);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(net));
+
+            // testing find native...
+            em.getTransaction().begin();
+
+            String table = AdvancedNetworkEntity.class.getAnnotation(Table.class).name();
+            String idColumn = AdvancedNetworkEntity.class.getDeclaredField("id").getAnnotation(Column.class).name();
+            String column = AdvancedNetworkEntity.class.getDeclaredField("network").getAnnotation(Column.class).name();
+            Query q = em.createNativeQuery("SELECT b." + column + " FROM " + table + " b WHERE b." + idColumn + " = #ID");
+            q.setParameter("ID", currentId);
+            List networks = q.getResultList();
+
+            Assert.assertEquals("AdvancedNetworkEntity with ID " + currentId + " was not found", 1, networks.size());
+
+            Assert.assertNull("Value of AdvancedNetworkEntity with ID " + currentId + " is not null", networks.get(0));
+        } catch (Exception ex) {
+            if(em.getTransaction() != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            
+            throw ex;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
+
+    @Test
     public void testAdvancedEntity() throws Exception {
         EntityManager em = emFactory.createEntityManager();
         try {
