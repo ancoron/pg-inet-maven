@@ -37,6 +37,11 @@
             <artifactId>org.eclipse.persistence.osgi</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>org.eclipse.persistence.core</artifactId>
+            <version>${eclipselink.version}</version>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>test-util</artifactId>
             <version>${project.version}</version>
@@ -86,6 +91,8 @@
                         </Export-Package>
                         <Import-Package>
                             org.eclipse*;resolution:=optional;version="[\$(version;=;\$(@)),\$(version;+;\$(@)))",
+                            org.postgresql*;resolution:=optional;version="[\$(version;=;\$(@)),\$(version;+;\$(@)))",
+                            org.ancoron*;resolution:=optional;version="[\$(version;=;\$(@)),\$(version;+;\$(@)))",
                             *
                         </Import-Package>
                     </instructions>

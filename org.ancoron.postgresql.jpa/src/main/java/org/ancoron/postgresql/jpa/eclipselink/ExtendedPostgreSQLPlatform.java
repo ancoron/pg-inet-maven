@@ -15,11 +15,16 @@
  */
 package org.ancoron.postgresql.jpa.eclipselink;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.net.InetAddress;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.IPTarget;
@@ -52,123 +57,32 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
     private static final int TYPE_INET = 60002;
     private static final int TYPE_MAC = 60003;
     private static final int TYPE_NET = 60004;
+    private static final int TYPE_IP = 60005;
 
     @Override
-    public int getJDBCType(Class javaType) {
-        if (javaType == INET) {
-            return TYPE_INET;
-        } else if(javaType == CIDR) {
-            return TYPE_CIDR;
-        } else if(javaType == MACADDR) {
-            return TYPE_MAC;
-        } else if(javaType == IPNetwork.class) {
-            return TYPE_NET;
+    protected void appendBoolean(Boolean bool, Writer writer) throws IOException {
+        if (bool.booleanValue()) {
+            writer.write("true");
+        } else {
+            writer.write("false");
         }
-        return super.getJDBCType(javaType);
-    }
-
-    @Override
-    public int getJDBCType(DatabaseField field) {
-        if(IPNetwork.class.isAssignableFrom(field.getType())) {
-            return TYPE_NET;
-        }
-        return super.getJDBCType(field);
-    }
-
-    @Override
-    public String getJdbcTypeName(int jdbcType) {
-        return super.getJdbcTypeName(jdbcType);
-    }
-
-    @Override
-    protected Hashtable buildFieldTypes() {
-        Hashtable fieldTypeMapping = super.buildFieldTypes();
-        
-        log.info("Generating FieldTypeMapping for PostgreSQL specific network data types");
-
-        fieldTypeMapping.put(IPNetwork.class, new FieldTypeDefinition("INET", false));
-        fieldTypeMapping.put(INET, new FieldTypeDefinition("INET", false));
-        fieldTypeMapping.put(CIDR, new FieldTypeDefinition("CIDR", false));
-        fieldTypeMapping.put(MACADDR, new FieldTypeDefinition("MACADDR", false));
-
-        return fieldTypeMapping;
-    }
-
-    
-    
-    @Override
-    protected Map<String, Class> buildClassTypes() {
-        Map<String, Class> classTypeMapping = super.buildClassTypes();
-
-        log.info("Generating ClassTypes for PostgreSQL specific network data types");
-
-        // Key the Map the other way for table creation.
-        classTypeMapping.put("INET", IPNetwork.class);
-        classTypeMapping.put("CIDR", IPNetwork.class);
-        classTypeMapping.put("MACADDR", MACADDR);
-
-        return classTypeMapping;
-    }
-
-    @Override
-    public ConnectionCustomizer createConnectionCustomizer(Accessor accessor, AbstractSession session) {
-        return new PostgreSQLConnectionCustomizer(accessor, session);
     }
     
     @Override
-    public boolean shouldUseCustomModifyForCall(DatabaseField field) {
-        Class type = field.getType();
-        if ((type != null) && (PGobject.class.isAssignableFrom(type)
-                || type == IPNetwork.class || type == IPTarget.class))
-        {
-            return true;
-        }
-        return super.shouldUseCustomModifyForCall(field);
-    }
+    public Object getObjectFromResultSet(ResultSet resultSet, int columnNumber, int type, AbstractSession session) throws SQLException {
+        Object result = super.getObjectFromResultSet(resultSet, columnNumber, type, session);
 
-    @Override
-    public Object getCustomModifyValueForCall(Call call, Object value, DatabaseField field, boolean shouldBind) {
-        Class type = field.getType();
-        if ((type != null) && PGobject.class.isAssignableFrom(type)) {
-            if(value == null) {
-                return null;
-            }
-
-            if(IPNetwork.class.isAssignableFrom(type)) {
-                value = convertToCidr((IPNetwork) value);
-            } else if (IPTarget.class.isAssignableFrom(type)) {
-                value = convertToInet((IPTarget) value);
-            } else if (INET.equals(type)) {
-                value = convertToInet(value);
-            } else if (CIDR.equals(type)) {
-                value = convertToCidr(value);
-            } else if (MACADDR.equals(type)) {
-                value = convertToMac(value);
-            }
-
-            return new BindCallCustomParameter(value);
-        }
-
-        return super.getCustomModifyValueForCall(call, value, field, shouldBind);
-    }
-
-    @Override
-    public Object convertToDatabaseType(Object value) {
-        if(value == null) {
-            return null;
-        }
-        
-        if(value != null) {
-            if((value instanceof IPTarget) || (value instanceof PGinet)) {
-                return convertToInet(value);
-            } else if((value instanceof IPNetwork) || (value instanceof PGcidr)) {
-                return convertToCidr(value);
-            } else if((value instanceof PGmacaddr)) {
-                return convertToMac(value);
+        if(result != null) {
+            if(type == TYPE_CIDR) {
+                convertToCidr(result);
+            } else if(type == TYPE_INET) {
+                convertToInet(result);
+            } else if(type == TYPE_MAC) {
+                convertToMac(result);
             }
         }
-        
-        return super.convertToDatabaseType(value);
+
+        return result;
     }
 
     private PGmacaddr convertToMac(Object value) {
@@ -241,78 +155,5 @@ public class ExtendedPostgreSQLPlatform extends PostgreSQLPlatform {
         }
         
         return cidr;
-    }
-    
-    protected Vector buildToInetVec() {
-        Vector vec = new Vector();
-        vec.addElement(IPTarget.class);
-        vec.addElement(String.class);
-        vec.addElement(InetAddress.class);
-        vec.addElement(INET);
-        return vec;
-    }
-
-    protected Vector buildToCidrVec() {
-        Vector vec = new Vector();
-        vec.addElement(IPNetwork.class);
-        vec.addElement(String.class);
-        vec.addElement(CIDR);
-        return vec;
-    }
-
-    protected Vector buildToMacaddrVec() {
-        Vector vec = new Vector();
-        vec.addElement(String.class);
-        vec.addElement(MACADDR);
-        return vec;
-    }
-
-    @Override
-    public Vector getDataTypesConvertedFrom(Class javaClass) {
-        if (dataTypesConvertedFromAClass == null) {
-            dataTypesConvertedFromAClass = new Hashtable(5);
-        }
-
-        Vector dataTypes = (Vector) dataTypesConvertedFromAClass.get(javaClass);
-        if (dataTypes != null) {
-            return dataTypes;
-
-        }
-
-        dataTypes = super.getDataTypesConvertedFrom(javaClass);
-        if ((javaClass == IPTarget.class) || (javaClass == InetAddress.class)) {
-            dataTypes.addElement(INET);
-        } else if ((javaClass == IPNetwork.class)) {
-            dataTypes.addElement(CIDR);
-        }
-
-        dataTypesConvertedFromAClass.put(javaClass, dataTypes);
-        return dataTypes;
-    }
-
-    @Override
-    public Vector getDataTypesConvertedTo(Class javaClass) {
-        if (dataTypesConvertedToAClass == null) {
-            dataTypesConvertedToAClass = new Hashtable(5);
-        }
-
-        Vector dataTypes = (Vector) dataTypesConvertedToAClass.get(javaClass);
-        if (dataTypes != null) {
-            return dataTypes;
-        }
-
-        if(javaClass == CIDR || IPNetwork.class.isAssignableFrom(javaClass)) {
-            dataTypes = buildToCidrVec();
-        } else if (javaClass == INET || IPTarget.class.isAssignableFrom(javaClass)) {
-            dataTypes = buildToInetVec();
-        } else if (javaClass == MACADDR) {
-            dataTypes = buildToMacaddrVec();
-        } else {
-            dataTypes = super.getDataTypesConvertedTo(javaClass);
-        }
-
-        dataTypesConvertedToAClass.put(javaClass, dataTypes);
-        
-        return dataTypes;
     }
 }

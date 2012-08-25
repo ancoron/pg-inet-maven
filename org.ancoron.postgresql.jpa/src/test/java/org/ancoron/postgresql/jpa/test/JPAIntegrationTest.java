@@ -16,7 +16,6 @@
 package org.ancoron.postgresql.jpa.test;
 
 import java.net.InetAddress;
-import java.sql.Driver;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,7 @@ import org.postgresql.util.PGobject;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.postgresql.net.PGcidr;
+import org.postgresql.Driver;
 import org.postgresql.net.PGinet;
 
 /**

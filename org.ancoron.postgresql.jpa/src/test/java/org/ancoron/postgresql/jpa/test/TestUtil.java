@@ -104,6 +104,10 @@ public class TestUtil {
         return "jdbc:postgresql://" + PG_HOSTNAME + ":" + PG_PORT + "/" + PG_DATABASE;
     }
 
+    public static String getPGNetJDBCUrl() {
+        return "jdbc:postgresqlnet://" + PG_HOSTNAME + ":" + PG_PORT + "/" + PG_DATABASE;
+    }
+
     /**
      * 
      * @return
