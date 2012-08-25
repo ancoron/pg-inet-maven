@@ -103,8 +103,6 @@ public class PostgreSQLDataSourceFactory implements PGDataSourceFactory {
     private void setPooledDSProperties(final PGConnectionPoolDataSource ds,
             final Properties props) throws SQLException
     {
-        ds.setDefaultAutoCommit(false);
-        
         if(props == null) {
             return;
         }
@@ -114,6 +112,8 @@ public class PostgreSQLDataSourceFactory implements PGDataSourceFactory {
                 String key = (String) it.next();
                 if(poolingKeys.contains(key)) {
                     throw new SQLException("RFC #122 - Property '" + key + "' not (yet) supported");
+                } else if(JDBC_PG_AUTO_COMMIT.equals(key)) {
+                    ds.setDefaultAutoCommit(Boolean.valueOf(props.getProperty(key)).booleanValue());
                 }
             }
         } catch(Exception x) {
@@ -151,13 +151,18 @@ public class PostgreSQLDataSourceFactory implements PGDataSourceFactory {
 
     public Driver createDriver(Properties prprts) throws SQLException {
         try {
-            Driver drv = new org.postgresql.Driver();
+            Class drv = null;
+
+            try {
+            // try with networking enhanced driver first...
+            drv = context.getBundle().loadClass("org.postgresql.net.Driver");
+            } catch(ClassNotFoundException cnf) {
+                // try with standard driver next...
+                drv = context.getBundle().loadClass("org.postgresql.Driver");
+            }
             
-            // ensure the driver is registered...
-            Class.forName(drv.getClass().getName(), false, getClass().getClassLoader());
-            
-            return drv;
-        } catch (ClassNotFoundException x) {
+            return (Driver) drv.newInstance();
+        } catch (Exception x) {
             throw new SQLException(x);
         }
     }

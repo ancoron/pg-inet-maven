@@ -25,12 +25,12 @@ import org.osgi.service.jdbc.DataSourceFactory;
 public interface PGDataSourceFactory extends DataSourceFactory {
 
 	/**
-	 * The "ssl" property (a boolean value).
+	 * The {@value} property (a boolean value).
 	 */
 	public static final String JDBC_PG_SSL = "ssl";
 
 	/**
-	 * The "sslfactory" property (a full class name).
+	 * The {@value} property (a full class name).
      * 
      * <p>
      * The class specified here must extend the class
@@ -42,12 +42,12 @@ public interface PGDataSourceFactory extends DataSourceFactory {
     public static final String JDBC_PG_COMPATIBLE = "compatible";
 
 	/**
-	 * The "loginTimeout" property (an integer value).
+	 * The {@value} property (an integer value).
 	 */
     public static final String JDBC_PG_LOGIN_TIMEOUT_IN_SECONDS = "loginTimeout";
 
 	/**
-	 * The "prepareThreshold" property (an integer value).
+	 * The {@value} property (an integer value).
      * 
      * <p>
      * This specifies the number of times a statement object must be reused
@@ -57,17 +57,22 @@ public interface PGDataSourceFactory extends DataSourceFactory {
     public static final String JDBC_PG_STATEMENT_PREPARE_THRESHOLD = "prepareThreshold";
 
 	/**
-	 * The "socketTimeout" property (an integer value).
+	 * The {@value} property (an integer value).
 	 */
     public static final String JDBC_PG_SOCKET_TIMEOUT_IN_SECONDS = "socketTimeout";
 
 	/**
-	 * The "tcpkeepalive" property (a boolean value).
+	 * The {@value} property (a boolean value).
 	 */
     public static final String JDBC_PG_TCP_KEEPALIVE = "tcpkeepalive";
 
 	/**
-	 * The "unknownLength" property (an integer value).
+	 * The {@value} property (an integer value).
 	 */
     public static final String JDBC_PG_UNKNOWN_LENGTH = "unknownLength";
+
+    /**
+	 * The {@value} property (a boolean value).
+	 */
+    public static final String JDBC_PG_AUTO_COMMIT = "autoCommit";
 }
