@@ -34,12 +34,13 @@ So, let's get started with using PostgreSQL network types within JPA:
  <dependency>
      <groupId>org.ancoron.postgresql</groupId>
      <artifactId>org.ancoron.postgresql.jpa</artifactId>
-     <version>9.1.901.jdbc4.1-rc5</version>
+     <version>9.1.901.jdbc4.1-rc6</version>
  </dependency>
 
 
-3.) In your JPA entity class you can now use the new types like this (for
-EclipseLink):
+3.) Enabling type mapping to the database
+
+3. a) Using EcliseLink Converters:
 
  import org.ancoron.postgresql.jpa.IPNetwork;
  import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
@@ -59,6 +60,34 @@ EclipseLink):
 
      // ...
  }
+
+
+3. b) Using automatic conversion (keep your Entities at javax.persistence):
+
+ import java.net.InetAddress;
+
+ // ...
+
+ @Entity
+ @Table(name="test_entity_ip")
+ public class IPTestEntity implements Serializable {
+
+     @Column(name="c_ip")
+     private InetAddress ip;
+
+     // ...
+ }
+
+Now to enable the automatic mapping for the java.net.InetAddress data type
+simply add this to your persistence.xml:
+
+ ...
+ <property name="eclipselink.session-event-listener"
+     value="org.ancoron.postgresql.jpa.eclipselink.ConverterInitializer"/>
+ ...
+
+In this case you don't even need the extended database platform and you can
+skip the next steps.
 
 
 4.) Before running the project you should make sure that you use the extended
