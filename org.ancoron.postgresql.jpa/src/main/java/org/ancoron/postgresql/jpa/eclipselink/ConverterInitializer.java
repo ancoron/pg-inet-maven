@@ -19,12 +19,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
-import java.sql.Types;
 import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Vector;
-import java.util.logging.Logger;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.IPTarget;
 import org.eclipse.persistence.descriptors.ClassDescriptor;
@@ -41,7 +39,6 @@ import org.eclipse.persistence.sessions.SessionEventListener;
 import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
 import org.postgresql.net.PGmacaddr;
-import org.postgresql.util.PGobject;
 
 /**
  *
