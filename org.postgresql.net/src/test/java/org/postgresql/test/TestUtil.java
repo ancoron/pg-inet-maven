@@ -23,6 +23,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
+import org.postgresql.core.TypeInfo;
 import org.postgresql.jdbc4.Jdbc4Connection;
 import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
@@ -73,9 +74,9 @@ public class TestUtil {
     protected static final String PG_PORT;
     protected static final boolean PG_SSL;
     protected static final String PG_USER;
-    
+
     static {
-        PG_HOSTNAME = System.getProperty("pgsql.host", "localhost");
+        PG_HOSTNAME = System.getProperty("pgsql.host", "127.0.0.1");
         PG_PORT = "5432";
         PG_DATABASE = System.getProperty("pgsql.database", "pg_inet_types_test");
         PG_USER = System.getProperty("pgsql.user", "pginettest");
@@ -104,7 +105,7 @@ public class TestUtil {
     }
     
     public static String getPGJDBCUrl() {
-        return "jdbc:postgresql://" + PG_HOSTNAME + ":" + PG_PORT + "/" + PG_DATABASE;
+        return "jdbc:postgresql://" + PG_HOSTNAME + ":" + PG_PORT + "/" + PG_DATABASE + "?loginTimeout=10";
     }
 
     /**
@@ -122,12 +123,25 @@ public class TestUtil {
         if(PG_SSL) {
             props.setProperty("ssl", "true");
         }
-        
+
         Jdbc4Connection conn = (Jdbc4Connection) DriverManager.getConnection(url, props);
-        
-        conn.addDataType("cidr", PGcidr.class);
-        conn.addDataType("inet", PGinet.class);
-        conn.addDataType("macaddr", PGmacaddr.class);
+
+        TypeInfo types = conn.getTypeInfo();
+        if(types.getPGobject("cidr") == null) {
+            conn.addDataType("cidr", PGcidr.class);
+        }
+
+        if(types.getPGobject("inet") == null) {
+            conn.addDataType("inet", PGinet.class);
+        }
+
+        if(types.getPGobject("macaddr") == null) {
+            conn.addDataType("macaddr", PGmacaddr.class);
+        }
+
+        Statement table = conn.createStatement();
+        table.execute("SET STATEMENT_TIMEOUT = 10000");
+        table.close();
 
         return conn;
     }
