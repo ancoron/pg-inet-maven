@@ -13,6 +13,10 @@ The official documentation for this is here:
 In advance, this repository provides some extended means like integration into
 OSGi runtime environments as well as other code extensions to the original.
 
+Please visit the wiki for more information:
+
+ https://github.com/ancoron/pg-inet-maven/wiki
+
 
 So, let's get started with using PostgreSQL network types within JPA:
 
