@@ -19,7 +19,6 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import org.ancoron.postgresql.jpa.IPNetwork;
@@ -37,7 +36,7 @@ import org.eclipse.persistence.annotations.Converter;
 public class NetworkEntity implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(generator = "sequence")
     @Column(name="c_id")
     private Long id;
     

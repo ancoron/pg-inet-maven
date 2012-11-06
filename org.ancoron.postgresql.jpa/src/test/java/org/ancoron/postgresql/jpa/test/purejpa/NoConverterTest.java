@@ -15,6 +15,7 @@
  */
 package org.ancoron.postgresql.jpa.test.purejpa;
 
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.List;
@@ -224,7 +225,73 @@ public class NoConverterTest {
         }
     }
 
-    protected <T extends AbstractNoConvEntity> void doSingleResultTest(EntityManager em, Class<T> c, String attribute, Object param) throws NoSuchFieldException, SecurityException {
+    @Test
+    public void testMethodLevelAnnotation() throws Exception {
+        EntityManager em = emFactory.createEntityManager();
+        try {
+            // testing persist() ...
+            em.getTransaction().begin();
+            UUID uuid = UUID.randomUUID();
+
+            NoConverterMethodEntity nc = new NoConverterMethodEntity();
+            nc.setCidr(new PGcidr("10.66.0.0/16"));
+            nc.setNetwork(new IPNetwork("10.67.0.0/16"));
+            nc.setInet(new PGinet("10.66.2.3"));
+            nc.setInetAddr(InetAddress.getLocalHost());
+            nc.setTarget(new IPTarget("10.66.2.4"));
+            nc.setMacaddr(new PGmacaddr("36:3a:ec:89:a6:19"));
+            nc.setUuid(uuid);
+            
+            em.persist(nc);
+            Assert.assertTrue(em.contains(nc));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("NoConverterMethodEntity with PGinet "
+                    + nc.getInet().getValue() + " was not persisted",
+                    nc.getId());
+
+            log.log(Level.INFO, "NoConverterMethodEntity with PGinet {0} has been persisted :)",
+                    nc.getInet().getValue());
+
+            Long currentId = nc.getId();
+            
+            // clear cache...
+            em.detach(nc);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(nc));
+
+            // testing find...
+            em.getTransaction().begin();
+
+            nc = em.find(NoConverterMethodEntity.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("NoConverterMethodEntity with ID " + currentId + " was not found", nc);
+            Assert.assertTrue(em.contains(nc));
+            Assert.assertEquals(uuid.toString(), nc.getUuid().toString());
+
+            log.log(Level.INFO, "NoConverterMethodEntity with ID {0} ({1}) has been found (by ID)",
+                    new Object[] {currentId, nc.getInet().getValue()});
+            doSingleResultTest(em, NoConverterMethodEntity.class, "cidr", new PGcidr("10.66.0.0/16"));
+            doSingleResultTest(em, NoConverterMethodEntity.class, "network", new IPNetwork("10.67.0.0/16"));
+            doSingleResultTest(em, NoConverterMethodEntity.class, "inet", new PGinet("10.66.2.3"));
+            doSingleResultTest(em, NoConverterMethodEntity.class, "target", new IPTarget("10.66.2.4"));
+            doSingleResultTest(em, NoConverterMethodEntity.class, "macaddr", new PGmacaddr("36:3a:ec:89:a6:19"));
+            doSingleResultTest(em, NoConverterMethodEntity.class, "uuid", uuid);
+        } catch (Exception ex) {
+            if(em.getTransaction() != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            
+            throw ex;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
+
+    protected <T extends Serializable> void doSingleResultTest(EntityManager em, Class<T> c, String attribute, Object param) throws NoSuchFieldException, SecurityException {
         // testing query...
         em.getTransaction().begin();
 
@@ -243,8 +310,8 @@ public class NoConverterTest {
 
         Assert.assertTrue(em.contains(nc));
 
-        log.log(Level.INFO, c.getSimpleName() + " with ID {0} ({1}) has been found (by query using "
-                + param.getClass().getSimpleName() + ")",
-                new Object[] {nc.id, nc.macaddr.getValue()});
+        log.log(Level.INFO, "{0} found by query where {1} = {2} (a {3})",
+                new Object[] {c.getSimpleName(), attribute,
+                    String.valueOf(param), param.getClass().getName()});
     }
 }
