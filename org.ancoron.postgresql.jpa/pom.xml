@@ -51,12 +51,14 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.eclipse.persistence</groupId>
             <artifactId>org.eclipse.persistence.antlr</artifactId>
             <version>${eclipselink.version}</version>
             <scope>test</scope>
         </dependency>
+        -->
     </dependencies>
 
     <build>
