@@ -1,1 +1,2 @@
 target/
+/org.ancoron.postgresql.jpa.test/derby.log

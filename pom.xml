@@ -98,6 +98,7 @@
         <module>org.postgresql.osgi</module>
         <module>org.postgresql.osgi.test</module>
         <module>org.ancoron.postgresql.jpa</module>
+        <module>org.ancoron.postgresql.jpa.test</module>
         <module>org.ancoron.postgresql.test.glassfish</module>
     </modules>
     
