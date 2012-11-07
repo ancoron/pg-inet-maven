@@ -291,6 +291,62 @@ public class NoConverterTest {
         }
     }
 
+    @Test
+    public void testUUIDPrimaryKey() throws Exception {
+        EntityManager em = emFactory.createEntityManager();
+        try {
+            // testing persist() ...
+            em.getTransaction().begin();
+
+            UUID uuid = UUID.randomUUID();
+            UUIDPKEntity u = new UUIDPKEntity();
+            u.setUuid(uuid);
+            u.setName("test-uuid");
+            
+            em.persist(u);
+            Assert.assertTrue(em.contains(u));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDPKEntity with name "
+                    + u.getName() + " was not persisted",
+                    u.getUuid());
+
+            log.log(Level.INFO, "UUIDPKEntity with name {0} has been persisted: {1}",
+                    new Object[] {u.getName(), u.getUuid()});
+
+            UUID currentId = u.getUuid();
+            
+            // clear cache...
+            em.detach(u);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(u));
+
+            // testing find...
+            em.getTransaction().begin();
+
+            u = em.find(UUIDPKEntity.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDPKEntity with UUID " + currentId + " was not found", u);
+            Assert.assertTrue(em.contains(u));
+            Assert.assertEquals("test-uuid", u.getName());
+
+            log.log(Level.INFO, "UUIDPKEntity with ID {0} ({1}) has been found (by ID)",
+                    new Object[] {currentId, u.getName()});
+            doSingleResultTest(em, UUIDPKEntity.class, "name", "test-uuid");
+        } catch (Exception ex) {
+            if(em.getTransaction() != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            
+            throw ex;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
+
     protected <T extends Serializable> void doSingleResultTest(EntityManager em, Class<T> c, String attribute, Object param) throws NoSuchFieldException, SecurityException {
         // testing query...
         em.getTransaction().begin();
