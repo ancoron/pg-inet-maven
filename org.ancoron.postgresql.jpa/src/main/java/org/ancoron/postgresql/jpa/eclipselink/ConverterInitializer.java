@@ -358,5 +358,12 @@ public class ConverterInitializer implements SessionEventListener {
     public void postLogin(SessionEvent event) {
         // no-op
     }
-    
+
+    public void preLogout(SessionEvent se) {
+        // no-op
+    }
+
+    public void postLogout(SessionEvent se) {
+        // no-op
+    }
 }
