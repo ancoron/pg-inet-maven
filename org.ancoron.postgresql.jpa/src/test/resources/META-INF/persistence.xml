@@ -57,6 +57,7 @@
         <class>org.ancoron.postgresql.jpa.test.purejpa.NoConverterMethodEntity</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.InheritedNoConvEntity</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDPKEntity</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDReferenceEntity</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <!--

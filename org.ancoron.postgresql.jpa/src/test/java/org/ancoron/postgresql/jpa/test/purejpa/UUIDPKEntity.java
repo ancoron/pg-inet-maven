@@ -16,10 +16,16 @@
 package org.ancoron.postgresql.jpa.test.purejpa;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
@@ -32,6 +38,8 @@ public class UUIDPKEntity implements Serializable {
     
     private UUID uuid;
     private String name;
+    private NoConverterMethodEntity ncm;
+    private Set<UUIDReferenceEntity> refs = new HashSet<UUIDReferenceEntity>();
 
     @Id
     @Column(name = "c_uuid")
@@ -50,5 +58,24 @@ public class UUIDPKEntity implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @ManyToOne(optional = false, cascade = CascadeType.ALL)
+    @JoinColumn(name = "fk_ncm", nullable = false)
+    public NoConverterMethodEntity getNcm() {
+        return ncm;
+    }
+
+    public void setNcm(NoConverterMethodEntity ncm) {
+        this.ncm = ncm;
+    }
+
+    @OneToMany(mappedBy = "reference", orphanRemoval = true, cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE})
+    public Set<UUIDReferenceEntity> getRefs() {
+        return refs;
+    }
+
+    public void setRefs(Set<UUIDReferenceEntity> refs) {
+        this.refs = refs;
     }
 }

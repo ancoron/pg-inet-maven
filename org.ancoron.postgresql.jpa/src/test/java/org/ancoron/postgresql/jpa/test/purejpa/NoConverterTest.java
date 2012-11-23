@@ -17,6 +17,8 @@ package org.ancoron.postgresql.jpa.test.purejpa;
 
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -232,15 +234,8 @@ public class NoConverterTest {
             // testing persist() ...
             em.getTransaction().begin();
             UUID uuid = UUID.randomUUID();
-
-            NoConverterMethodEntity nc = new NoConverterMethodEntity();
-            nc.setCidr(new PGcidr("10.66.0.0/16"));
-            nc.setNetwork(new IPNetwork("10.67.0.0/16"));
-            nc.setInet(new PGinet("10.66.2.3"));
-            nc.setInetAddr(InetAddress.getLocalHost());
-            nc.setTarget(new IPTarget("10.66.2.4"));
-            nc.setMacaddr(new PGmacaddr("36:3a:ec:89:a6:19"));
-            nc.setUuid(uuid);
+            NoConverterMethodEntity nc = createNoConvM(uuid, "10.66.0.0/16",
+                    "10.67.0.0/16", "10.66.2.3", "10.66.2.4", "36:3a:ec:89:a6:19");
             
             em.persist(nc);
             Assert.assertTrue(em.contains(nc));
@@ -291,6 +286,21 @@ public class NoConverterTest {
         }
     }
 
+    protected NoConverterMethodEntity createNoConvM(UUID uuid, String cidr,
+            String network, String inet, String ip, String mac)
+            throws SQLException, UnknownHostException
+    {
+        NoConverterMethodEntity nc = new NoConverterMethodEntity();
+        nc.setCidr(new PGcidr(cidr));
+        nc.setNetwork(new IPNetwork(network));
+        nc.setInet(new PGinet(inet));
+        nc.setInetAddr(InetAddress.getLocalHost());
+        nc.setTarget(new IPTarget(ip));
+        nc.setMacaddr(new PGmacaddr(mac));
+        nc.setUuid(uuid);
+        return nc;
+    }
+
     @Test
     public void testUUIDPrimaryKey() throws Exception {
         EntityManager em = emFactory.createEntityManager();
@@ -299,9 +309,12 @@ public class NoConverterTest {
             em.getTransaction().begin();
 
             UUID uuid = UUID.randomUUID();
+            UUID ncm = UUID.randomUUID();
             UUIDPKEntity u = new UUIDPKEntity();
             u.setUuid(uuid);
             u.setName("test-uuid");
+            u.setNcm(createNoConvM(ncm, "11.66.0.0/16", "11.67.0.0/16",
+                    "11.66.2.3", "11.66.2.4", "37:3a:ec:89:a6:19"));
             
             em.persist(u);
             Assert.assertTrue(em.contains(u));
@@ -320,6 +333,7 @@ public class NoConverterTest {
             em.detach(u);
             em.getEntityManagerFactory().getCache().evictAll();
             Assert.assertFalse(em.contains(u));
+            u = null;
 
             // testing find...
             em.getTransaction().begin();
@@ -334,6 +348,81 @@ public class NoConverterTest {
             log.log(Level.INFO, "UUIDPKEntity with ID {0} ({1}) has been found (by ID)",
                     new Object[] {currentId, u.getName()});
             doSingleResultTest(em, UUIDPKEntity.class, "name", "test-uuid");
+
+            NoConverterMethodEntity ne = u.getNcm();
+            Assert.assertNotNull("UUID reference failed", ne);
+
+            Assert.assertNotNull("UUID reference failed on UUID", ne.getUuid());
+
+            log.log(Level.INFO, "UUIDPKEntity with ID {0} ({1}) references NoConverterMethodEntity with UUID {2}",
+                    new Object[] {currentId, u.getName(), ne.getUuid()});
+
+            // testing merge ...
+            em.getTransaction().begin();
+            u.setName("new-name");
+            em.merge(u);
+            em.getTransaction().commit();
+            
+            // clear cache...
+            em.detach(u);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(u));
+            u = null;
+
+            // testing find...
+            em.getTransaction().begin();
+
+            u = em.find(UUIDPKEntity.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDPKEntity with UUID " + currentId + " was not found", u);
+            Assert.assertTrue(em.contains(u));
+            Assert.assertEquals("new-name", u.getName());
+
+            log.log(Level.INFO, "UUIDPKEntity with ID {0} ({1}) has been found (by ID)",
+                    new Object[] {currentId, u.getName()});
+            doSingleResultTest(em, UUIDPKEntity.class, "name", "new-name");
+
+
+            // Test many-to-one/one-to-many ...
+            UUIDReferenceEntity ref = new UUIDReferenceEntity();
+            ref.setId(UUID.randomUUID());
+            ref.setReference(u);
+            u.getRefs().add(ref);
+            
+            em.getTransaction().begin();
+            em.persist(ref);
+            Assert.assertTrue(em.contains(ref));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDReferenceEntity was not persisted",
+                    ref.getId());
+
+            log.log(Level.INFO, "UUIDReferenceEntity has been persisted: {0}",
+                    new Object[] {ref.getId()});
+            
+            currentId = ref.getId();
+
+            // clear cache...
+            em.detach(ref);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(ref));
+            ref = null;
+
+            // testing find...
+            em.getTransaction().begin();
+
+            ref = em.find(UUIDReferenceEntity.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDReferenceEntity with ID " + currentId + " was not found", ref);
+            Assert.assertTrue(em.contains(ref));
+
+            Assert.assertEquals("Referenced NoConverterMethodEntity not as expected",
+                    ncm, ref.getReference().getNcm().getUuid());
+
+            log.log(Level.INFO, "UUIDReferenceEntity references UUIDPKEntity {0} and NoConverterMethodEntity {1}",
+                    new Object[] {ref.getReference().getUuid(), ref.getReference().getNcm().getUuid()});
         } catch (Exception ex) {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
