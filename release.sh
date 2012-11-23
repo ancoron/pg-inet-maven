@@ -19,6 +19,7 @@ mvn release:prepare \
     -DdevelopmentVersion=${DEV_VERSION} \
     -DreleaseVersion=${VERSION} \
     -Dtag=release/${VERSION} \
-    -DpreparationGoals="clean,install,verify" || error "Release preparation failed!"
+    -DpreparationGoals="clean,install,verify" \
+    -Darguments="-DskipTests" || error "Release preparation failed!"
 
-mvn release:perform || error "Release failed!"
+mvn release:perform -Darguments="-DskipTests" || error "Release failed!"
