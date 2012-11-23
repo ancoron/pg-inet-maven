@@ -106,7 +106,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-patch-plugin</artifactId>
-                <version>1.1.1</version>
                 <executions>
                     <execution>
                         <id>bugfixing</id>
@@ -181,6 +180,12 @@
                     </excludes>
                     <systemPropertyVariables>
                         <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
+                        <pgsql.host>${pgsql.host}</pgsql.host>
+                        <pgsql.port>${pgsql.port}</pgsql.port>
+                        <pgsql.database>${pgsql.database}</pgsql.database>
+                        <pgsql.user>${pgsql.user}</pgsql.user>
+                        <pgsql.password>${pgsql.password}</pgsql.password>
+                        <pgsql.ssl>${pgsql.ssl}</pgsql.ssl>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

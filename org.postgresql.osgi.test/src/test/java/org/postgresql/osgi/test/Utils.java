@@ -73,7 +73,7 @@ public class Utils {
     
     static {
         PG_HOSTNAME = System.getProperty("pgsql.host", "localhost");
-        PG_PORT = "5432";
+        PG_PORT = System.getProperty("pgsql.port", "5432");
         PG_DATABASE = System.getProperty("pgsql.database", "pg_inet_types_test");
         PG_USER = System.getProperty("pgsql.user", "pginettest");
         PG_PASSWORD = System.getProperty("pgsql.password", "pginettest");

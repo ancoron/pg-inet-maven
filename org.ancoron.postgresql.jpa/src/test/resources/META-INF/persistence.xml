@@ -54,7 +54,10 @@
     <persistence-unit name="noconv-test-unit" transaction-type="RESOURCE_LOCAL">
         <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
         <class>org.ancoron.postgresql.jpa.test.purejpa.NoConverterEntity</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.NoConverterMethodEntity</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.InheritedNoConvEntity</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDPKEntity</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDReferenceEntity</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <!--
