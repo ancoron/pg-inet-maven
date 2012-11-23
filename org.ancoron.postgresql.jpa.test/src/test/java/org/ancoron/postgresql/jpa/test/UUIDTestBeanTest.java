@@ -127,4 +127,19 @@ public class UUIDTestBeanTest {
         UUIDTestEntity result = getBean().findByName(expResult.getName());
         assertEquals(expResult, result);
     }
+
+    @Test
+    public void testUpdate() throws Exception {
+        System.out.println("update");
+        
+        UUID uuid = getBean().addUUID("update");
+        getBean().update(uuid, "update-new-name");
+
+        UUIDTestEntity expResult = new UUIDTestEntity();
+        expResult.setId(uuid);
+        expResult.setName("update-new-name");
+
+        UUIDTestEntity result = getBean().findByName(expResult.getName());
+        assertEquals(expResult, result);
+    }
 }

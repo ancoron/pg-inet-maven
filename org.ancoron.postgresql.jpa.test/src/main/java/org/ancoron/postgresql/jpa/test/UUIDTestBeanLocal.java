@@ -34,6 +34,8 @@ public interface UUIDTestBeanLocal {
 
     UUIDTestEntity findByName(String name);
 
+    void update(UUID uuid, String name);
+
     List<UUID> findAllIds();
     
 }

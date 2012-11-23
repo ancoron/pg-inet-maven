@@ -69,4 +69,11 @@ public class UUIDTestBean implements UUIDTestBeanLocal {
         Query q = em.createQuery("SELECT u.id FROM " + UUIDTestEntity.class.getSimpleName() + " u");
         return q.getResultList();
     }
+
+    @Override
+    public void update(UUID uuid, String name) {
+        UUIDTestEntity entity = findByUUID(uuid);
+        entity.setName(name);
+        em.merge(entity);
+    }
 }
