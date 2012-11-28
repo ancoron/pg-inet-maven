@@ -7,10 +7,6 @@
         <class>org.ancoron.postgresql.jpa.test.NetworkConfiguration</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
-            <!--
-            <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
-            -->
-            <property name="eclipselink.target-database" value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
             <property name="eclipselink.logging.logger" value="JavaLogger"/>
             <property name="eclipselink.logging.level" value="INFO"/>
             <property name="eclipselink.logging.parameters" value="true"/>
@@ -32,10 +28,6 @@
         <class>org.ancoron.postgresql.jpa.test.mapping.InetAddressEntity</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
-            <!--
-            <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
-            -->
-            <property name="eclipselink.target-database" value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
             <property name="eclipselink.logging.logger" value="JavaLogger"/>
             <property name="eclipselink.logging.level" value="INFO"/>
             <property name="eclipselink.logging.parameters" value="true"/>
@@ -58,12 +50,10 @@
         <class>org.ancoron.postgresql.jpa.test.purejpa.InheritedNoConvEntity</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDPKEntity</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDReferenceEntity</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDPKEntity2</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDReferenceEntity2</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
-            <!--
-            <property name="eclipselink.target-database" value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
-            <property name="eclipselink.target-database" value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
-            -->
             <property name="eclipselink.session-event-listener" value="org.ancoron.postgresql.jpa.eclipselink.ConverterInitializer"/>
             <property name="eclipselink.logging.logger" value="JavaLogger"/>
             <property name="eclipselink.logging.level" value="INFO"/>

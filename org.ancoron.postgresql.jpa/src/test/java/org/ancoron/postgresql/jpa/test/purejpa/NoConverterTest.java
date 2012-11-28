@@ -436,6 +436,143 @@ public class NoConverterTest {
         }
     }
 
+
+    @Test
+    public void testUUIDPrimaryKey2() throws Exception {
+        EntityManager em = emFactory.createEntityManager();
+        try {
+            // testing persist() ...
+            em.getTransaction().begin();
+
+            UUID uuid = UUID.randomUUID();
+            UUID ncm = UUID.randomUUID();
+            UUIDPKEntity2 u = new UUIDPKEntity2();
+            u.setId(uuid);
+            u.setName("test-uuid-2");
+            u.setNcm(createNoConvM(ncm, "11.68.0.0/16", "11.68.0.0/16",
+                    "11.68.2.3", "11.68.2.4", "37:3a:ec:89:a6:20"));
+            
+            em.persist(u);
+            Assert.assertTrue(em.contains(u));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDPKEntity2 with name "
+                    + u.getName() + " was not persisted",
+                    u.getId());
+
+            log.log(Level.INFO, "UUIDPKEntity2 with name {0} has been persisted: {1}",
+                    new Object[] {u.getName(), u.getId()});
+
+            // create a copy...
+            UUID currentId = u.getId();
+            
+            // clear cache...
+            em.detach(u);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(u));
+            u = null;
+
+            // testing find...
+            em.getTransaction().begin();
+
+            u = em.find(UUIDPKEntity2.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDPKEntity2 with UUID " + currentId + " was not found", u);
+            Assert.assertTrue(em.contains(u));
+            Assert.assertEquals("test-uuid-2", u.getName());
+
+            log.log(Level.INFO, "UUIDPKEntity2 with ID {0} ({1}) has been found (by ID)",
+                    new Object[] {currentId, u.getName()});
+            doSingleResultTest(em, UUIDPKEntity2.class, "name", "test-uuid-2");
+
+            NoConverterMethodEntity ne = u.getNcm();
+            Assert.assertNotNull("UUID reference failed", ne);
+
+            Assert.assertNotNull("UUID reference failed on UUID", ne.getUuid());
+
+            log.log(Level.INFO, "UUIDPKEntity2 with ID {0} ({1}) references NoConverterMethodEntity with UUID {2}",
+                    new Object[] {currentId, u.getName(), ne.getUuid()});
+
+            // testing merge ...
+            em.getTransaction().begin();
+            u.setName("new-name-2");
+            em.merge(u);
+            em.getTransaction().commit();
+            
+            // clear cache...
+            em.detach(u);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(u));
+            u = null;
+
+            // testing find...
+            em.getTransaction().begin();
+
+            u = em.find(UUIDPKEntity2.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDPKEntity2 with UUID " + currentId + " was not found", u);
+            Assert.assertTrue(em.contains(u));
+            Assert.assertEquals("new-name-2", u.getName());
+
+            log.log(Level.INFO, "UUIDPKEntity2 with ID {0} ({1}) has been found (by ID)",
+                    new Object[] {currentId, u.getName()});
+            doSingleResultTest(em, UUIDPKEntity2.class, "name", "new-name-2");
+
+
+            // Test many-to-one/one-to-many ...
+            UUIDReferenceEntity2 ref = new UUIDReferenceEntity2();
+            ref.setId(UUID.randomUUID());
+            ref.setReference(u);
+            u.getRefs().add(ref);
+            
+            em.getTransaction().begin();
+            em.persist(ref);
+            Assert.assertTrue(em.contains(ref));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDReferenceEntity2 was not persisted",
+                    ref.getId());
+
+            log.log(Level.INFO, "UUIDReferenceEntity2 has been persisted: {0}",
+                    new Object[] {ref.getId()});
+            
+            currentId = ref.getId();
+
+            // clear cache...
+            em.detach(ref);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(ref));
+            ref = null;
+
+            // testing find...
+            em.getTransaction().begin();
+
+            ref = em.find(UUIDReferenceEntity2.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDReferenceEntity2 with ID " + currentId + " was not found", ref);
+            Assert.assertTrue(em.contains(ref));
+
+            Assert.assertEquals("Referenced NoConverterMethodEntity not as expected",
+                    ncm, ref.getReference().getNcm().getUuid());
+
+            log.log(Level.INFO, "UUIDReferenceEntity2 references UUIDPKEntity2 {0} and NoConverterMethodEntity {1}",
+                    new Object[] {ref.getReference().getId(), ref.getReference().getNcm().getUuid()});
+        } catch (Exception ex) {
+            if(em.getTransaction() != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            
+            throw ex;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
+
     protected <T extends Serializable> void doSingleResultTest(EntityManager em, Class<T> c, String attribute, Object param) throws NoSuchFieldException, SecurityException {
         // testing query...
         em.getTransaction().begin();
