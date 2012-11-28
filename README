@@ -38,13 +38,13 @@ So, let's get started with using PostgreSQL network types within JPA:
  <dependency>
      <groupId>org.ancoron.postgresql</groupId>
      <artifactId>org.ancoron.postgresql.jpa</artifactId>
-     <version>9.1.901.jdbc4.1-rc6</version>
+     <version>9.1.901.jdbc4.1-rc8</version>
  </dependency>
 
 
 3.) Enabling type mapping to the database
 
-3. a) Using EcliseLink Converters:
+3. a) Using explicit EcliseLink Converters:
 
  import org.ancoron.postgresql.jpa.IPNetwork;
  import org.ancoron.postgresql.jpa.eclipselink.NetworkConverter;
@@ -66,7 +66,7 @@ So, let's get started with using PostgreSQL network types within JPA:
  }
 
 
-3. b) Using automatic conversion (keep your Entities at javax.persistence):
+3. b) Using automatic conversion (keeps your Entities at pure javax.persistence):
 
  import java.net.InetAddress;
 
@@ -90,45 +90,8 @@ simply add this to your persistence.xml:
      value="org.ancoron.postgresql.jpa.eclipselink.ConverterInitializer"/>
  ...
 
-In this case you don't even need the extended database platform and you can
-skip the next steps.
 
-
-4.) Before running the project you should make sure that you use the extended
-DatabasePlatform provided by the same dependency. Do so by editing the
-persistence.xml file of your project:
-
- <?xml version="1.0" encoding="UTF-8"?>
- <persistence version="2.0"
-              xmlns="http://java.sun.com/xml/ns/persistence"
-              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
-                  http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
-     <persistence-unit name="PGNetworkUnit" transaction-type="RESOURCE_LOCAL">
-         <!--
-             ...JDBC access declarations...
-
-             ...classes...
-         -->
-         <properties>
-             <!-- the standard platform doesn't know anything about the custom types
-             <property name="eclipselink.target-database"
-                       value="org.eclipse.persistence.platform.database.PostgreSQLPlatform"/>
-             -->
-
-             <!-- this is the real one -->
-             <property name="eclipselink.target-database"
-                       value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
-
-             <!--
-                 ...other properties...
-             -->
-         </properties>
-     </persistence-unit>
- </persistence>
-
-
-5.) If you are running your application inside an application server please
+4.) If you are running your application inside an application server please
 make sure that you use the appropriate ServerPlaftorm with Eclipselink,
 because we have to unwrap the wrapper-connections established by the app server,
 e.g. for GlassFish:
@@ -145,9 +108,6 @@ e.g. for GlassFish:
              ...classes...
          -->
          <properties>
-             <property name="eclipselink.target-database"
-                       value="org.ancoron.postgresql.jpa.eclipselink.ExtendedPostgreSQLPlatform"/>
-
              <property name="eclipselink.target-server" value="SunAS9"/>
 
              <!--
@@ -158,6 +118,6 @@ e.g. for GlassFish:
  </persistence>
 
 
-Now you're all set.
+Now you should be all set.
 
  Have fun!
