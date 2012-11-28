@@ -16,6 +16,7 @@
 package org.ancoron.postgresql.jpa.eclipselink;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
@@ -26,6 +27,7 @@ import java.util.Vector;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.IPTarget;
 import org.eclipse.persistence.descriptors.ClassDescriptor;
+import org.eclipse.persistence.internal.descriptors.MethodAttributeAccessor;
 import org.eclipse.persistence.internal.helper.DatabaseField;
 import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.DirectCollectionMapping;
@@ -214,44 +216,80 @@ public class ConverterInitializer implements SessionEventListener {
     private Class getFieldType(final Class c, final String attributeName, final boolean mapValueType) {
         for(Field f : c.getDeclaredFields()) {
             if(f.getName().equals(attributeName)) {
-                Class type = f.getType();
-                Type gt = f.getGenericType();
-                if(gt instanceof ParameterizedType) {
-                    ParameterizedType pt = (ParameterizedType) gt;
-                    if(Collection.class.isAssignableFrom(type)
-                            || Map.class.isAssignableFrom(type)) {
-                        // a list, set or map...
-                        Type[] args = pt.getActualTypeArguments();
-                        if(args.length > 1 && mapValueType) {
-                            // must be a map...
-                            return (Class) args[1];
-                        } else {
-                            return (Class) args[0];
-                        }
-                    } else {
-                        // use outer type...
-                        return type;
-                    }
-                } else {
-                    return type;
-                }
+                return extractType(f.getGenericType(), f.getType(), mapValueType);
             }
         }
 
         return null;
     }
 
-    protected Converter getConverter(final Class c, final String attributeName, final boolean mapValueType) {
+    private Class getMethodReturnType(final Class c, final String methodName, final boolean mapValueType) {
+        for(Method m : c.getDeclaredMethods()) {
+            if(m.getName().equals(methodName)) {
+                return extractType(m.getGenericReturnType(),
+                        m.getReturnType(), mapValueType);
+            }
+        }
+
+        return null;
+    }
+
+    private Class getMethodParameterType(final Class c, final String methodName, final boolean mapValueType) {
+        for(Method m : c.getDeclaredMethods()) {
+            if(m.getName().equals(methodName)) {
+                return extractType(m.getGenericParameterTypes()[0],
+                        m.getParameterTypes()[0], mapValueType);
+            }
+        }
+
+        return null;
+    }
+
+    private Class extractType(Type gt, Class type, final boolean mapValueType) {
+        if(gt instanceof ParameterizedType) {
+            ParameterizedType pt = (ParameterizedType) gt;
+            if(Collection.class.isAssignableFrom(type)
+                    || Map.class.isAssignableFrom(type)) {
+                // a list, set or map...
+                Type[] args = pt.getActualTypeArguments();
+                if(args.length > 1 && mapValueType) {
+                    // must be a map...
+                    return (Class) args[1];
+                } else {
+                    return (Class) args[0];
+                }
+            } else {
+                // use outer type...
+                return type;
+            }
+        } else {
+            return type;
+        }
+    }
+
+    protected Converter getConverter(final Class c, final String attributeName,
+            final String methodName, final boolean mapValueType)
+    {
         Converter conv = null;
         Class s = c;
         Class type = null;
 
+        // also traverse up the super-classes...
         do {
-            type = getFieldType(s, attributeName, mapValueType);
+            if(methodName == null) {
+                // field access...
+                type = getFieldType(s, attributeName, mapValueType);
+            } else if(methodName.startsWith("set")) {
+                // setter access...
+                type = getMethodParameterType(s, methodName, mapValueType);
+            } else {
+                // getter access...
+                type = getMethodReturnType(s, methodName, mapValueType);
+            }
         } while(type == null && (s = s.getSuperclass()) != null);
 
         if(type != null) {
-            // set converters as approiate...
+            // set converters as appropriate...
             if(IPNetwork.class.isAssignableFrom(type)) {
                 conv = new IPNetworkConverter();
             } else if(IPTarget.class.isAssignableFrom(type)) {
@@ -298,8 +336,18 @@ public class ConverterInitializer implements SessionEventListener {
                 Converter conv = null;
                 Converter conv2 = null;
                 String attribute = mapping.getAttributeName();
+                String method = null;
                 DatabaseField f = null;
                 DatabaseField f2 = null;
+
+                if (mapping.getAttributeAccessor() instanceof MethodAttributeAccessor) {
+                    MethodAttributeAccessor maa = (MethodAttributeAccessor) mapping.getAttributeAccessor();
+                    if(!maa.isWriteOnly()) {
+                        method = maa.getGetMethodName();
+                    } else {
+                        method = maa.getSetMethodName();
+                    }
+                }
                 
                 if (mapping instanceof DirectToFieldMapping) {
 					dfm = (DirectToFieldMapping) mapping;
@@ -320,11 +368,11 @@ public class ConverterInitializer implements SessionEventListener {
                 // only consider mappings that are deemed to produce
                 // byte[] database fields from objects...
                 if(conv != null && conv instanceof SerializedObjectConverter) {
-                    conv = getConverter(cls, attribute, false);
+                    conv = getConverter(cls, attribute, method, false);
 				}
 
                 if(conv2 != null && conv2 instanceof SerializedObjectConverter) {
-                    conv2 = getConverter(cls, attribute, true);
+                    conv2 = getConverter(cls, attribute, method, true);
                 }
 
                 if(conv != null) {
