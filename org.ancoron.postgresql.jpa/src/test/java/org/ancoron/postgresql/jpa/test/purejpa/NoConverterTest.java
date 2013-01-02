@@ -15,30 +15,17 @@
  */
 package org.ancoron.postgresql.jpa.test.purejpa;
 
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.Column;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.Query;
-import javax.persistence.Table;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.IPTarget;
-import org.ancoron.postgresql.jpa.test.TestUtil;
 import org.junit.Test;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.postgresql.net.Driver;
 import org.postgresql.net.PGcidr;
 import org.postgresql.net.PGinet;
 import org.postgresql.net.PGmacaddr;
@@ -47,7 +34,7 @@ import org.postgresql.net.PGmacaddr;
  *
  * @author ancoron
  */
-public class NoConverterTest {
+public class NoConverterTest extends AbstractTestBase {
 
     private static final Logger log;
     
@@ -55,32 +42,8 @@ public class NoConverterTest {
         log = Logger.getLogger(NoConverterTest.class.getName());
     }
 
-    private static EntityManagerFactory emFactory;
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        log.info("Building JPA EntityManager for unit tests");
-
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put("javax.persistence.jdbc.url", TestUtil.getPGJDBCUrl());
-        properties.put("javax.persistence.jdbc.driver", Driver.class.getName());
-        properties.put("javax.persistence.jdbc.user", TestUtil.getPGUser());
-        properties.put("javax.persistence.jdbc.password", TestUtil.getPGPassword());
-
-        emFactory = Persistence.createEntityManagerFactory("noconv-test-unit", properties);
-    }
-
-    @AfterClass
-    public static void tearDown() throws Exception {
-        log.info("Shuting down JPA layer.");
-        if (emFactory != null) {
-            emFactory.close();
-        }
-    }
-
     @Test
     public void testNoAnnotation() throws Exception {
-        EntityManager em = emFactory.createEntityManager();
         try {
             // testing persist() ...
             em.getTransaction().begin();
@@ -139,28 +102,8 @@ public class NoConverterTest {
         }
     }
 
-    private void doThrow(Exception ex) throws Exception {
-        SQLException sx = null;
-
-        Throwable e = ex;
-        while(sx == null && e.getCause() != null) {
-            e = e.getCause();
-            if(e instanceof SQLException) {
-                sx = (SQLException) e;
-                break;
-            }
-        }
-
-        if(sx != null && sx.getNextException() != null) {
-            throw sx.getNextException();
-        }
-
-        throw ex;
-    }
-
     @Test
     public void testInheritance() throws Exception {
-        EntityManager em = emFactory.createEntityManager();
         try {
             // testing persist() ...
             em.getTransaction().begin();
@@ -233,20 +176,12 @@ public class NoConverterTest {
             doSingleResultTest(em, InheritedNoConvEntity.class, "inetAddr", InetAddress.getByName("10.66.2.3"));
             doSingleResultTest(em, InheritedNoConvEntity.class, "macaddr", new PGmacaddr("36:3a:ec:89:a6:19"));
         } catch (Exception ex) {
-            if(em.getTransaction() != null && em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
             doThrow(ex);
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
     @Test
     public void testMethodLevelAnnotation() throws Exception {
-        EntityManager em = emFactory.createEntityManager();
         try {
             // testing persist() ...
             em.getTransaction().begin();
@@ -291,14 +226,7 @@ public class NoConverterTest {
             doSingleResultTest(em, NoConverterMethodEntity.class, "macaddr", new PGmacaddr("36:3a:ec:89:a6:19"));
             doSingleResultTest(em, NoConverterMethodEntity.class, "uuid", uuid);
         } catch (Exception ex) {
-            if(em.getTransaction() != null && em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
             doThrow(ex);
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
@@ -319,7 +247,6 @@ public class NoConverterTest {
 
     @Test
     public void testUUIDPrimaryKey() throws Exception {
-        EntityManager em = emFactory.createEntityManager();
         try {
             // testing persist() ...
             em.getTransaction().begin();
@@ -440,21 +367,13 @@ public class NoConverterTest {
             log.log(Level.INFO, "UUIDReferenceEntity references UUIDPKEntity {0} and NoConverterMethodEntity {1}",
                     new Object[] {ref.getReference().getUuid(), ref.getReference().getNcm().getUuid()});
         } catch (Exception ex) {
-            if(em.getTransaction() != null && em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
             doThrow(ex);
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
 
     @Test
     public void testUUIDPrimaryKey2() throws Exception {
-        EntityManager em = emFactory.createEntityManager();
         try {
             // testing persist() ...
             em.getTransaction().begin();
@@ -576,20 +495,12 @@ public class NoConverterTest {
             log.log(Level.INFO, "UUIDReferenceEntity2 references UUIDPKEntity2 {0} and NoConverterMethodEntity {1}",
                     new Object[] {ref.getReference().getId(), ref.getReference().getNcm().getUuid()});
         } catch (Exception ex) {
-            if(em.getTransaction() != null && em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
             doThrow(ex);
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
     }
 
     @Test
     public void testUUIDNullRef() throws Exception {
-        EntityManager em = emFactory.createEntityManager();
         try {
             UUID currentId = UUID.randomUUID();
 
@@ -652,39 +563,7 @@ public class NoConverterTest {
             Assert.assertFalse(em.contains(ref));
             em.getTransaction().commit();
         } catch (Exception ex) {
-            if(em.getTransaction() != null && em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            
             doThrow(ex);
-        } finally {
-            if (em != null) {
-                em.close();
-            }
         }
-    }
-
-    protected <T extends Serializable> void doSingleResultTest(EntityManager em, Class<T> c, String attribute, Object param) throws NoSuchFieldException, SecurityException {
-        // testing query...
-        em.getTransaction().begin();
-
-        Query q = em.createQuery("SELECT b FROM " + c.getSimpleName()
-                + " b WHERE b." + attribute + " = :VAL",
-                NoConverterEntity.class);
-        q.setParameter("VAL", param);
-        List networks = q.getResultList();
-
-        em.getTransaction().commit();
-
-        Assert.assertEquals("Number of found " + c.getSimpleName() + " instances",
-                1, networks.size());
-
-        T nc = (T) networks.get(0);
-
-        Assert.assertTrue(em.contains(nc));
-
-        log.log(Level.INFO, "{0} found by query where {1} = {2} (a {3})",
-                new Object[] {c.getSimpleName(), attribute,
-                    String.valueOf(param), param.getClass().getName()});
     }
 }
