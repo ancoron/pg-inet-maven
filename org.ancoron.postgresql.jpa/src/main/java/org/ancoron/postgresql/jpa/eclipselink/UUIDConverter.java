@@ -31,19 +31,20 @@ import org.eclipse.persistence.sessions.Session;
  * <pre>
  * // ...
  * import java.util.UUID;
- * import org.ledger.core.UUIDConverter;
+ * import org.ancoron.postgresql.jpa.eclipselink.UUIDConverter;
  * // ...
  *  
- *  &#064;Entity
- *  &#064;Converter(name="uuidConverter",converterCalss=UUIDConverter.class)
- *  public class Elink implements Serializable {
- *  	 &#064;Convert("uuidConverter")
- * 	 &#064;Column(name="elink_id")
- * 	 private UUID elinkId;
- *   //..
- *   }
- *   </pre>
- *   </p>
+ * &#064;Entity
+ * &#064;Converter(name="uuidConverter",converterClass=UUIDConverter.class)
+ * public class Elink implements Serializable {
+ *     &#064;Convert("uuidConverter")
+ *     &#064;Column(name="elink_id")
+ *     private UUID elinkId;
+ * 
+ *     // ...
+ * }
+ * </pre>
+ * </p>
  *   
  * @author Edward Mann
  * 
