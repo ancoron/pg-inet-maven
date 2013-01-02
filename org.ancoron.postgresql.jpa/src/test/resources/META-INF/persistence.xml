@@ -52,6 +52,7 @@
         <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDReferenceEntity</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDPKEntity2</class>
         <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDReferenceEntity2</class>
+        <class>org.ancoron.postgresql.jpa.test.purejpa.UUIDNullableRefEntity</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="eclipselink.session-event-listener" value="org.ancoron.postgresql.jpa.eclipselink.ConverterInitializer"/>

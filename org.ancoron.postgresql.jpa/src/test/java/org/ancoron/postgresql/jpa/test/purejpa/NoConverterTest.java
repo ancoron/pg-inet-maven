@@ -131,13 +131,31 @@ public class NoConverterTest {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            
-            throw ex;
+            doThrow(ex);
         } finally {
             if (em != null) {
                 em.close();
             }
         }
+    }
+
+    private void doThrow(Exception ex) throws Exception {
+        SQLException sx = null;
+
+        Throwable e = ex;
+        while(sx == null && e.getCause() != null) {
+            e = e.getCause();
+            if(e instanceof SQLException) {
+                sx = (SQLException) e;
+                break;
+            }
+        }
+
+        if(sx != null && sx.getNextException() != null) {
+            throw sx.getNextException();
+        }
+
+        throw ex;
     }
 
     @Test
@@ -218,8 +236,7 @@ public class NoConverterTest {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            
-            throw ex;
+            doThrow(ex);
         } finally {
             if (em != null) {
                 em.close();
@@ -277,8 +294,7 @@ public class NoConverterTest {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            
-            throw ex;
+            doThrow(ex);
         } finally {
             if (em != null) {
                 em.close();
@@ -427,8 +443,7 @@ public class NoConverterTest {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            
-            throw ex;
+            doThrow(ex);
         } finally {
             if (em != null) {
                 em.close();
@@ -564,8 +579,84 @@ public class NoConverterTest {
             if(em.getTransaction() != null && em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
+            doThrow(ex);
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
+
+    @Test
+    public void testUUIDNullRef() throws Exception {
+        EntityManager em = emFactory.createEntityManager();
+        try {
+            UUID currentId = UUID.randomUUID();
+
+            // Test many-to-one/one-to-many ...
+            UUIDNullableRefEntity ref = new UUIDNullableRefEntity();
+            ref.setId(UUID.randomUUID());
+            ref.setReference(null);
             
-            throw ex;
+            // testing persist() ...
+            em.getTransaction().begin();
+            em.persist(ref);
+            Assert.assertTrue(em.contains(ref));
+
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDNullableRefEntity was not persisted",
+                    ref.getId());
+
+            log.log(Level.INFO, "UUIDNullableRefEntity has been persisted: {0}",
+                    new Object[] {ref.getId()});
+            
+            currentId = ref.getId();
+
+            // clear cache...
+            em.detach(ref);
+            em.getEntityManagerFactory().getCache().evictAll();
+            Assert.assertFalse(em.contains(ref));
+            ref = null;
+
+            // testing find...
+            em.getTransaction().begin();
+
+            ref = em.find(UUIDNullableRefEntity.class, currentId);
+            
+            em.getTransaction().commit();
+            Assert.assertNotNull("UUIDNullableRefEntity with ID " + currentId + " was not found", ref);
+            Assert.assertTrue(em.contains(ref));
+            Assert.assertNull(ref.getReference());
+
+            // update 1 ...
+            UUIDPKEntity2 e = new UUIDPKEntity2();
+            e.setId(UUID.randomUUID());
+            e.setName("test-nullable");
+            NoConverterMethodEntity ncm = new NoConverterMethodEntity();
+            e.setNcm(ncm);
+            
+            em.getTransaction().begin();
+            ref.setReference(e);
+            ref = em.merge(ref);
+            em.getTransaction().commit();
+
+            // update 2 ...
+            em.getTransaction().begin();
+            ref.setReference(null);
+            ref = em.merge(ref);
+            em.getTransaction().commit();
+
+            // remove...
+            em.getTransaction().begin();
+            em.remove(ref);
+            Assert.assertFalse(em.contains(ref));
+            em.getTransaction().commit();
+        } catch (Exception ex) {
+            if(em.getTransaction() != null && em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            
+            doThrow(ex);
         } finally {
             if (em != null) {
                 em.close();
