@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
@@ -93,7 +94,7 @@ public abstract class AbstractTestBase {
     protected <T extends Serializable> void doSingleResultTest(EntityManager em, Class<T> c, String attribute, Object param) throws NoSuchFieldException, SecurityException {
         // testing query...
         em.getTransaction().begin();
-        Query q = em.createQuery("SELECT b FROM " + c.getSimpleName() + " b WHERE b." + attribute + " = :VAL", NoConverterEntity.class);
+        Query q = em.createQuery("SELECT b FROM " + c.getSimpleName() + " b WHERE b." + attribute + " = :VAL", c);
         q.setParameter("VAL", param);
         List networks = q.getResultList();
         em.getTransaction().commit();
@@ -103,7 +104,7 @@ public abstract class AbstractTestBase {
         log.log(Level.INFO, "{0} found by query where {1} = {2} (a {3})", new Object[]{c.getSimpleName(), attribute, String.valueOf(param), param.getClass().getName()});
     }
 
-    protected void doThrow(Exception ex) throws Exception {
+    protected void doThrow(Exception ex) {
         SQLException sx = null;
         Throwable e = ex;
         while (sx == null && e.getCause() != null) {
@@ -114,9 +115,28 @@ public abstract class AbstractTestBase {
             }
         }
         if (sx != null && sx.getNextException() != null) {
-            throw sx.getNextException();
+            throw new RuntimeException(sx.getNextException());
         }
-        throw ex;
+        throw new RuntimeException(ex);
     }
     
+    protected <T> T transactional(Callable<T> callable) {
+        T result = null;
+        try {
+            em.getTransaction().begin();
+            result = callable.call();
+            em.getTransaction().commit();
+        } catch(Exception x) {
+            doThrow(x);
+        }
+
+        return result;
+    }
+
+    protected void clearCache(Object... entities) {
+        emFactory.getCache().evictAll();
+        for(Object o : entities) {
+            em.detach(o);
+        }
+    }
 }
