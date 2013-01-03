@@ -4,7 +4,7 @@
     <parent>
         <artifactId>pginet-parent</artifactId>
         <groupId>org.ancoron.postgresql</groupId>
-        <version>8.4.702.jdbc4.1-SNAPSHOT</version>
+        <version>8.4.702.jdbc4.1-rc7</version>
     </parent>
 
     <groupId>org.ancoron.postgresql</groupId>
