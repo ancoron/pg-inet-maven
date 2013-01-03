@@ -21,9 +21,13 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Vector;
+import javax.management.RuntimeErrorException;
 import org.ancoron.postgresql.jpa.IPNetwork;
 import org.ancoron.postgresql.jpa.IPTarget;
 import org.eclipse.persistence.descriptors.ClassDescriptor;
@@ -33,6 +37,9 @@ import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.DirectCollectionMapping;
 import org.eclipse.persistence.mappings.DirectMapMapping;
 import org.eclipse.persistence.mappings.DirectToFieldMapping;
+import org.eclipse.persistence.mappings.ManyToOneMapping;
+import org.eclipse.persistence.mappings.ObjectReferenceMapping;
+import org.eclipse.persistence.mappings.OneToOneMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.mappings.converters.SerializedObjectConverter;
 import org.eclipse.persistence.sessions.Session;
@@ -47,6 +54,8 @@ import org.postgresql.net.PGmacaddr;
  * @author ancoron
  */
 public class ConverterInitializer implements SessionEventListener {
+
+    protected final Set<ObjectReferenceMapping> references = new HashSet<ObjectReferenceMapping>();
 
     @Override
     public void missingDescriptor(SessionEvent event) {
@@ -363,6 +372,10 @@ public class ConverterInitializer implements SessionEventListener {
                     dcm = (DirectCollectionMapping) mapping;
                     conv = dcm.getValueConverter();
                     f = dcm.getDirectField();
+                } else if (mapping instanceof ObjectReferenceMapping) {
+                    references.add((ObjectReferenceMapping) mapping);
+                    // post-pone references...
+                    continue;
                 }
 
                 // only consider mappings that are deemed to produce
@@ -404,7 +417,33 @@ public class ConverterInitializer implements SessionEventListener {
 
     @Override
     public void postLogin(SessionEvent event) {
-        // no-op
+        for(Iterator<ObjectReferenceMapping> it = references.iterator(); it.hasNext(); ) {
+            ObjectReferenceMapping mapping = it.next();
+
+            try {
+                if(mapping instanceof OneToOneMapping) {
+                    OneToOneMapping m = (OneToOneMapping) mapping;
+                    Map<DatabaseField, DatabaseField> fMap = m.getSourceToTargetKeyFields();
+                    for(Map.Entry<DatabaseField, DatabaseField> fEntry : fMap.entrySet()) {
+                        DatabaseField source = fEntry.getKey();
+                        DatabaseField target = fEntry.getValue();
+
+                        if(DatabaseField.NULL_SQL_TYPE == source.getSqlType()
+                                && DatabaseField.NULL_SQL_TYPE != target.getSqlType())
+                        {
+                            // set column type to avoid varchar default...
+                            source.setSqlType(target.getSqlType());
+                        }
+                    }
+                }
+            } catch(RuntimeException x) {
+                // log errors, but don't fail the login...
+                event.getSession().getSessionLog().logThrowable(6, x);
+            } finally {
+                // always remove the entry...
+                it.remove();
+            }
+        }
     }
 
     public void preLogout(SessionEvent se) {
