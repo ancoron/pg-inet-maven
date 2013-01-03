@@ -38,7 +38,7 @@ So, let's get started with using PostgreSQL network types within JPA:
  <dependency>
      <groupId>org.ancoron.postgresql</groupId>
      <artifactId>org.ancoron.postgresql.jpa</artifactId>
-     <version>9.1.901.jdbc4.1-rc8</version>
+     <version>9.1.901.jdbc4.1-rc9</version>
  </dependency>
 
 
